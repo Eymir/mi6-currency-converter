@@ -1,0 +1,107 @@
+<?xml version="1.0" encoding="utf-8"?>
+
+<RelativeLayout android:id="@+id/RelativeLayout01"
+	android:layout_width="fill_parent" android:layout_height="fill_parent"
+	xmlns:android="http://schemas.android.com/apk/res/android">
+	
+<LinearLayout
+    android:id="@+id/linearlayoutId"
+    android:layout_width="350dp"
+    android:layout_height="550dp"
+    android:layout_alignParentTop="true"
+    android:fitsSystemWindows="false"
+    android:orientation="vertical" >
+	<LinearLayout
+        android:id="@+id/headerLayoutId"
+        android:layout_width="match_parent"
+        android:layout_height="50dp"
+        android:layout_alignParentTop="true"
+        android:fitsSystemWindows="false"
+        android:orientation="horizontal" >
+        
+	    <TextView
+	        android:id="@+id/TextView01"
+	        android:layout_width="wrap_content"
+	        android:layout_height="wrap_content"
+	        android:text="From/To   "
+	        android:textStyle="bold" />
+
+	    <TextView
+	        android:id="@+id/TextView01"
+	        android:layout_width="wrap_content"
+	        android:layout_height="wrap_content"
+	        android:text="Amount"
+	        android:textStyle="bold" />
+
+	</LinearLayout>
+
+    <LinearLayout
+        android:id="@+id/firstCurrLayoutId"
+        android:layout_width="match_parent"
+        android:layout_height="50dp"
+        android:layout_alignParentTop="true"
+        android:fitsSystemWindows="false"
+        android:orientation="horizontal" >
+
+        <Spinner
+            android:id="@+id/spinnerFrom"
+            android:layout_width="80dp"
+            android:layout_height="wrap_content"
+            android:entries="@array/currency_arrays"
+            android:prompt="@string/main.spinner.currency_prompt" />
+
+        <EditText
+            android:id="@+id/firstCurr"
+            android:layout_width="150dp"
+            android:layout_height="wrap_content"
+            android:inputType="numberDecimal"
+            android:lines="1" >
+        </EditText>
+    </LinearLayout>
+
+    <LinearLayout
+        android:id="@+id/secondCurrLayoutId"
+        android:layout_width="match_parent"
+        android:layout_height="50dp"
+        android:layout_alignParentTop="true"
+        android:fitsSystemWindows="false"
+        android:orientation="horizontal" >
+
+        <Spinner
+            android:id="@+id/spinnerTo"
+            android:layout_width="80dp"
+            android:layout_height="wrap_content" />
+
+        <EditText
+            android:id="@+id/secondCurr"
+            android:layout_width="150dp"
+            android:layout_height="wrap_content"
+            android:inputType="numberDecimal"
+            android:lines="1" >
+        </EditText>
+    </LinearLayout>
+
+    <LinearLayout
+        android:layout_width="match_parent"
+        android:layout_height="wrap_content" >
+
+        <CheckBox
+            android:id="@+id/onlineRates"
+            android:layout_width="wrap_content"
+            android:layout_height="34dp"
+            android:text="Use Online Rates" />
+
+    </LinearLayout>
+
+</LinearLayout>
+
+<Button
+    android:id="@+id/convert"
+    android:layout_width="300dp"
+    android:layout_height="wrap_content"
+    android:layout_alignParentBottom="true"
+    android:layout_centerHorizontal="true"
+    android:layout_marginBottom="22dp"
+    android:text="Convert" />
+
+</RelativeLayout>
