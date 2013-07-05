@@ -119,8 +119,7 @@ public class CurrencyConverter extends Activity implements OnClickListener {
 	  	spinnerFrom.setOnItemSelectedListener(new CustomOnItemSelectedListener());
     }
    
-	@Override
-	public void onClick(View arg0) {
+	public void convertAction(View view) {
 		// TODO Auto-generated method stub
 	
 		if (hasFirstFieldData() && hasSecondFieldData()) {
@@ -278,6 +277,14 @@ public class CurrencyConverter extends Activity implements OnClickListener {
 	    	
 			super.onPostExecute(result);   
 	    }
+	}
+
+
+
+	@Override
+	public void onClick(View v) {
+		convertAction(v);
+		
 	}
 	
 	

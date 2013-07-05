@@ -9,8 +9,12 @@
     android:layout_width="350dp"
     android:layout_height="550dp"
     android:layout_alignParentTop="true"
+    android:animateLayoutChanges="true"
+    android:clipChildren="true"
+    android:clipToPadding="true"
     android:fitsSystemWindows="false"
     android:orientation="vertical" >
+
 	<LinearLayout
         android:id="@+id/headerLayoutId"
         android:layout_width="match_parent"
@@ -102,6 +106,7 @@
     android:layout_alignParentBottom="true"
     android:layout_centerHorizontal="true"
     android:layout_marginBottom="22dp"
-    android:text="Convert" />
+    android:text="Convert"
+    android:onClick="convertAction" />
 
 </RelativeLayout>
