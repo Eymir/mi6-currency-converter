@@ -24,6 +24,9 @@ import android.os.AsyncTask;
 import android.os.Bundle;
 import android.util.Log;
 import android.view.LayoutInflater;
+import android.view.Menu;
+import android.view.MenuInflater;
+import android.view.MenuItem;
 import android.view.View;
 import android.view.View.OnClickListener;
 import android.widget.ArrayAdapter;
@@ -32,6 +35,7 @@ import android.widget.CheckBox;
 import android.widget.EditText;
 import android.widget.FrameLayout;
 import android.widget.Spinner;
+import android.widget.Toast;
 
 import com.mi6.currencyconverter.R;
 import com.mi6.currencyconverter.dto.CurrencyDetails;
@@ -50,7 +54,9 @@ public class CurrencyConverter extends Activity implements OnClickListener {
 	private AlertDialog alertDialog;
 	private Button alertButton;
 	
-	CurrencyDetails currencyDetails;
+	private CurrencyDetails currencyDetails;
+	
+	private Menu menu;
 	
     @Override
     public void onCreate(Bundle savedInstanceState) {
@@ -209,7 +215,29 @@ public class CurrencyConverter extends Activity implements OnClickListener {
 		return currencyRate;
 	}
 	
+	@Override
+	public boolean onCreateOptionsMenu(Menu menu) {
+		MenuInflater inflater = getMenuInflater();
+	    inflater.inflate(R.layout.menu, menu);
+	    return true;
+	}
 	
+	@Override
+	public boolean onOptionsItemSelected(MenuItem item) {
+	    // Handle item selection
+	    switch (item.getItemId()) {
+	        case R.id.menu_cache_policy:
+	        	Toast.makeText(this, 
+	        			"Cache Policy selected",
+	        			Toast.LENGTH_LONG).show();
+	            return true;
+	        case R.id.menu_exit:
+	            finish();
+	            return true;
+	        default:
+	            return super.onOptionsItemSelected(item);
+	    }
+	}
 	
 	private class GetLiveRatesTask extends AsyncTask<Void, Void, Void>{
 	    	    
@@ -252,9 +280,6 @@ public class CurrencyConverter extends Activity implements OnClickListener {
 			return null;
 	     
 	    }
-	    
-	    
-	    
 	    
 	    
 	    @Override
