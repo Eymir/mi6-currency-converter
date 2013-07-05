@@ -6,6 +6,9 @@
     <string name="alertDialog.messages.add_value_in_field">Please add values in one of the amount fields.</string>
     <string name="main.general.button.ok">OK</string>
     <string name="main.spinner.currency_prompt">Choose a currency</string>
+    
+    <string name="menu_cache_policy">Cache Policy</string>
+    <string name="menu_exit">Exit</string>
 
  
     <string-array name="currency_arrays">
