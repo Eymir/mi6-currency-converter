@@ -3,7 +3,7 @@
     <string name="main.app_name">Currency Converter</string>
     <string name="alertDialog.messages.add_amount">Please add an amount</string>
     <string name="alertDialog.messages.delete_value_from_field">Please delete values from one of the amount fields.</string>
-    <string name="alertDialog.messages.add_value_in_field">Please add values in one of the amount fields.</string>
+    <string name="alertDialog.messages.add_value_in_field">Please add an amount.</string>
     <string name="main.general.button.ok">OK</string>
     <string name="main.spinner.currency_prompt">Choose a currency</string>
     
@@ -11,10 +11,11 @@
     <string name="menu_exit">Exit</string>
 
  
-    <string-array name="currency_arrays">
+    <string-array name="currency_array">
         <item>EUR</item>
         <item>USD</item>
-        <item>GPB</item>
+        <item>GBP</item>
         <item>RON</item>
+        <item>HUF</item>
     </string-array>
 </resources>

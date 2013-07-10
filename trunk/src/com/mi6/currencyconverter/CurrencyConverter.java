@@ -35,6 +35,7 @@ import android.widget.CheckBox;
 import android.widget.EditText;
 import android.widget.FrameLayout;
 import android.widget.Spinner;
+import android.widget.TextView;
 import android.widget.Toast;
 
 import com.mi6.currencyconverter.R;
@@ -44,17 +45,16 @@ import com.mi6.currencyconverter.dto.RateValues;
 public class CurrencyConverter extends Activity implements OnClickListener {
     /** Called when the activity is first created. */
 	
-	private EditText firstCurr;
-	private EditText secondCurr;
-	private Double liveRates;
+	private List<Double> liveRates;
+	
+	private EditText curr0, curr1, curr2, curr3, curr4;
 	private Button convert;
-	private Spinner spinnerFrom, spinnerTo;
+	private Spinner spinner0, spinner1, spinner2, spinner3, spinner4;
 	private CheckBox onlineRates;
 	
 	private AlertDialog alertDialog;
 	private Button alertButton;
 	
-	private CurrencyDetails currencyDetails;
 	
 	private Menu menu;
 	
@@ -65,8 +65,6 @@ public class CurrencyConverter extends Activity implements OnClickListener {
         
         addMainLayout();
         addAlertDialog();
-        addItemsOnSpinner2();
-    	addListenerOnSpinnerItemSelection();
     	
     }
 
@@ -93,126 +91,131 @@ public class CurrencyConverter extends Activity implements OnClickListener {
 
 	private void addMainLayout() {
 		//main layout
-        firstCurr = (EditText)findViewById(R.id.firstCurr);
-        secondCurr = (EditText)findViewById(R.id.secondCurr);
+        curr0 = (EditText)findViewById(R.id.curr0);
+        curr1 = (EditText)findViewById(R.id.curr1);
+        curr2 = (EditText)findViewById(R.id.curr2);
+        curr3 = (EditText)findViewById(R.id.curr3);
+        curr4 = (EditText)findViewById(R.id.curr4);
+        
+        spinner0 = (Spinner) findViewById(R.id.spinner_0);
+        spinner1 = (Spinner) findViewById(R.id.spinner_1);
+        spinner2 = (Spinner) findViewById(R.id.spinner_2);
+        spinner3 = (Spinner) findViewById(R.id.spinner_3);
+        spinner4 = (Spinner) findViewById(R.id.spinner_4);
+        
         convert = (Button)this.findViewById(R.id.convert);        
         convert.setOnClickListener(this);
         onlineRates = (CheckBox)findViewById(R.id.onlineRates);
 	}
-    
-    // add items into spinner dynamically
-    public void addItemsOnSpinner2() {
-   
-	  	spinnerTo = (Spinner) findViewById(R.id.spinnerTo);
-	  	spinnerFrom = (Spinner) findViewById(R.id.spinnerFrom);
-	  	
-	  	currencyDetails = CurrencyRatesUtil.ReadCurrencyDetailsFromCsv(this.getApplicationContext(), (String)spinnerFrom.getSelectedItem());
-	  	List<RateValues> rateValuesList = currencyDetails.getRateValues();
-	  	List<String> list = new ArrayList<String>();
-	  	
-	  	for (RateValues rv : rateValuesList) {
-	  		list.add(rv.getName());
-	  	}
-	  	
-	  	ArrayAdapter<String> dataAdapter = new ArrayAdapter<String>(this,
-	  		android.R.layout.simple_spinner_item, list);
-	  	dataAdapter.setDropDownViewResource(android.R.layout.simple_spinner_dropdown_item);
-	  	spinnerTo.setAdapter(dataAdapter);
-	    }
 	   
-	public void addListenerOnSpinnerItemSelection() {
-	  	spinnerFrom = (Spinner) findViewById(R.id.spinnerFrom);
-	  	spinnerFrom.setOnItemSelectedListener(new CustomOnItemSelectedListener());
-    }
-   
 	public void convertAction(View view) {
-		// TODO Auto-generated method stub
-	
-		if (hasFirstFieldData() && hasSecondFieldData()) {
-			// Showing Alert Message
-			alertDialog.setMessage((String)this.getString(R.string.alertDialog_messages_delete_value_from_field));
-	        alertDialog.show();
-		} else {
-			if (!hasFirstFieldData() && !hasSecondFieldData()) {
+			String mainCurrency;
+			if (!hasMainFieldData()) {
 				// Showing Alert Message
 				alertDialog.setMessage((String)this.getString(R.string.alertDialog_messages_add_value_in_field));
 		        alertDialog.show();
 			} else {
-				if (hasFirstFieldData()) {
-					convertFirstToSecond();
+				mainCurrency = getMainCurrency();
+				convert(mainCurrency);
 				}
-				if (hasSecondFieldData()) {
-					convertSecondToFirst();
-				}
-			}
-		}
 	}
 
-	protected void convertSecondToFirst() {
-		Double currencyRate;
-		if (onlineRates.isChecked()) {
-			new GetLiveRatesTask().execute();
-		} else {
-			String amount;
-			DecimalFormat f = new DecimalFormat("#.##");
-			currencyRate = getCurencyRate();
-			double val = Double.parseDouble(secondCurr.getText().toString());
-			amount = f.format(val/currencyRate);
-			firstCurr.setText(amount);
-		}
+	protected void convert(String mainCurrency) {
 		
-
-	}
-
-
-	protected void convertFirstToSecond() {
-		Double currencyRate;
 		if (onlineRates.isChecked()) {
 			new GetLiveRatesTask().execute();
 			
 		} else {
-			String amount;
-			DecimalFormat f = new DecimalFormat("#.##");
-			currencyRate = getCurencyRate();
-			double val = Double.parseDouble(firstCurr.getText().toString());
-			amount = f.format(val*currencyRate);
-			secondCurr.setText(amount);
+			
+			Double valueToConvert;
+			CurrencyDetails currencyDetails;
+			currencyDetails = getCurencyDetails(mainCurrency);
+			valueToConvert = getMainFieldData();
+			curr0.setText(convertSingleValue(currencyDetails, (String)spinner0.getSelectedItem(), valueToConvert));
+			curr1.setText(convertSingleValue(currencyDetails, (String)spinner1.getSelectedItem(), valueToConvert));
+			curr2.setText(convertSingleValue(currencyDetails, (String)spinner2.getSelectedItem(), valueToConvert));
+			curr3.setText(convertSingleValue(currencyDetails, (String)spinner3.getSelectedItem(), valueToConvert));
+			curr4.setText(convertSingleValue(currencyDetails, (String)spinner4.getSelectedItem(), valueToConvert));
 		}
 
 
 	}
-	
-	private boolean hasFirstFieldData() {
+
+	private String getMainCurrency(){
 		
-		if ((firstCurr != null) && (!"".equalsIgnoreCase(firstCurr.getText().toString()))) {
+		String currency = null;
+		View currentSelectedItem = getWindow().getCurrentFocus();
+		
+		if (curr0.equals(currentSelectedItem)) {
+			currency = (String)spinner0.getSelectedItem();
+		}
+		if (curr1.equals(currentSelectedItem)) {
+			currency = (String)spinner1.getSelectedItem();
+		}
+		if (curr2.equals(currentSelectedItem)) {
+			currency = (String)spinner2.getSelectedItem();
+		}
+		if (curr3.equals(currentSelectedItem)) {
+			currency = (String)spinner3.getSelectedItem();
+		}
+		if (curr4.equals(currentSelectedItem)) {
+			currency = (String)spinner4.getSelectedItem();
+		}
+		
+		return currency;
+	} 
+	
+	private String convertSingleValue(CurrencyDetails currencyDetails, String toCurr, Double value) {
+				
+		DecimalFormat f = new DecimalFormat("#.##");
+		Double currencyRate = getCurrencyRate(currencyDetails, toCurr);
+		return f.format(value*currencyRate);
+	}
+	
+	private String convertOnlineSingleValue(Double rate, Double value) {
+		DecimalFormat f = new DecimalFormat("#.##");
+		return f.format(value*rate);
+	}
+	
+	private boolean hasMainFieldData() {
+		
+		View currentView = getWindow().getCurrentFocus();
+		if ((currentView != null) && (!"".equalsIgnoreCase(((EditText) currentView).getText().toString()))) {
 			return true;
 		} else {
 			return false;
 		}
 		
 	}
-	private boolean hasSecondFieldData() {
-		
-		if ((secondCurr != null) && (!"".equalsIgnoreCase(secondCurr.getText().toString()))) {
-			return true;
+	
+	private Double getMainFieldData() {
+		Double value;
+		View currentView = getWindow().getCurrentFocus();
+		if ((currentView != null) && (!"".equalsIgnoreCase(((EditText) currentView).getText().toString()))) {
+			value = Double.parseDouble(((EditText) currentView).getText().toString());
 		} else {
-			return false;
+			value = Double.valueOf(0);
 		}
-		
+		return value;		
 	}
 	
-	private Double getCurencyRate() {
-		String spinnerToValue;
+	private CurrencyDetails getCurencyDetails(String currency) {
+		
+		CurrencyDetails currencyDetails;
+		currencyDetails = CurrencyRatesUtil.ReadCurrencyDetailsFromCsv(this.getApplicationContext(), currency);
+		
+		return currencyDetails;
+	}
+	
+	private Double getCurrencyRate(CurrencyDetails currencyDetails, String toCurr) {
 		Double currencyRate = Double.valueOf(0);
-		spinnerTo = (Spinner) findViewById(R.id.spinnerTo);
-		spinnerToValue = String.valueOf(spinnerTo.getSelectedItem());
 		
 		for (RateValues rv : currencyDetails.getRateValues()) {
-	  		if (rv.getName().equals(spinnerToValue)){
+	  		if (rv.getName().equals(toCurr)){
 	  			currencyRate = rv.getUnitsPerCurrency();
 	  		}
-	  	}
-		return currencyRate;
+		}
+	return currencyRate;
 	}
 	
 	@Override
@@ -244,8 +247,23 @@ public class CurrencyConverter extends Activity implements OnClickListener {
 	    @Override
 	    protected Void doInBackground(Void... params) {
 			
-	    	String url = "http://finance.yahoo.com/d/quotes.csv?e=goog.csv&f=sl1&s="+(String)spinnerFrom.getSelectedItem()+(String)spinnerTo.getSelectedItem()+"=x";
+	    	liveRates = new ArrayList<Double>();
+	    	String mainCurrency = getMainCurrency();
+	    	String baseURL = "http://finance.yahoo.com/d/quotes.csv?e=goog.csv&f=sl1&s=";
 	    	
+	    	liveRates.add(getOnlineRate(baseURL+mainCurrency+(String) spinner0.getSelectedItem()+"=x"));
+	    	liveRates.add(getOnlineRate(baseURL+mainCurrency+(String) spinner1.getSelectedItem()+"=x"));
+	    	liveRates.add(getOnlineRate(baseURL+mainCurrency+(String) spinner2.getSelectedItem()+"=x"));
+	    	liveRates.add(getOnlineRate(baseURL+mainCurrency+(String) spinner3.getSelectedItem()+"=x"));
+	    	liveRates.add(getOnlineRate(baseURL+mainCurrency+(String) spinner4.getSelectedItem()+"=x"));
+			return null;
+	     
+	    }
+
+
+		private Double getOnlineRate(String url) {
+			
+			String line = null;
 			HttpClient httpClient = new DefaultHttpClient();
 			//HttpHost proxy = new HttpHost("172.17.0.10", 8080);
 			//httpClient.getParams().setParameter(ConnRoutePNames.DEFAULT_PROXY, proxy);
@@ -266,9 +284,8 @@ public class CurrencyConverter extends Activity implements OnClickListener {
                         InputStream content = entity.getContent();
                         BufferedReader reader = new BufferedReader(
                                         new InputStreamReader(content));
-                        String line = reader.readLine();
+                        line = reader.readLine();
                         line = line.subSequence(11, line.length()).toString();
-                        liveRates = Double.parseDouble(line);
                 } else {
                         Log.e("Getter", "Failed to download file");
                 }
@@ -277,27 +294,20 @@ public class CurrencyConverter extends Activity implements OnClickListener {
         } catch (IOException e) {
                 e.printStackTrace();
         }
-			return null;
-	     
-	    }
+			return Double.parseDouble(line);
+		}
 	    
 	    
 	    @Override
 	    protected void onPostExecute(Void result) {
-	     
-	    	if (hasFirstFieldData()) {
-	    		String amount;
-	    		DecimalFormat f = new DecimalFormat("#.##");
-	    		double val = Double.parseDouble(firstCurr.getText().toString());
-	    		amount = f.format(val*liveRates);
-				secondCurr.setText(amount);
-			}
-			if (hasSecondFieldData()) {
-				String amount;
-	    		DecimalFormat f = new DecimalFormat("#.##");
-				double val = Double.parseDouble(secondCurr.getText().toString());
-				amount = f.format(val/liveRates);
-				firstCurr.setText(amount);
+	    	Double valueToConvert;
+			valueToConvert = getMainFieldData();
+	    	if (hasMainFieldData()) {
+	    		curr0.setText(convertOnlineSingleValue(liveRates.get(0), valueToConvert));
+				curr1.setText(convertOnlineSingleValue(liveRates.get(1), valueToConvert));
+				curr2.setText(convertOnlineSingleValue(liveRates.get(2), valueToConvert));
+				curr3.setText(convertOnlineSingleValue(liveRates.get(3), valueToConvert));
+				curr4.setText(convertOnlineSingleValue(liveRates.get(4), valueToConvert));
 			}
 	    	
 			super.onPostExecute(result);   

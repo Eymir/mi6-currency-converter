@@ -15,56 +15,35 @@
     android:fitsSystemWindows="false"
     android:orientation="vertical" >
 
-	<LinearLayout
-        android:id="@+id/headerLayoutId"
-        android:layout_width="match_parent"
-        android:layout_height="50dp"
-        android:layout_alignParentTop="true"
-        android:fitsSystemWindows="false"
-        android:orientation="horizontal" >
-        
-	    <TextView
-	        android:id="@+id/TextView01"
-	        android:layout_width="wrap_content"
-	        android:layout_height="wrap_content"
-	        android:text="From/To   "
-	        android:textStyle="bold" />
 
-	    <TextView
-	        android:id="@+id/TextView01"
-	        android:layout_width="wrap_content"
-	        android:layout_height="wrap_content"
-	        android:text="Amount"
-	        android:textStyle="bold" />
-
-	</LinearLayout>
 
     <LinearLayout
-        android:id="@+id/firstCurrLayoutId"
+        android:id="@+id/curr0LayoutId"
         android:layout_width="match_parent"
         android:layout_height="50dp"
         android:layout_alignParentTop="true"
         android:fitsSystemWindows="false"
-        android:orientation="horizontal" >
+        android:orientation="horizontal" 
+        android:background="@drawable/background">
 
         <Spinner
-            android:id="@+id/spinnerFrom"
-            android:layout_width="80dp"
-            android:layout_height="wrap_content"
-            android:entries="@array/currency_arrays"
+            android:id="@+id/spinner_0"
+            android:layout_width="100dp"
+            android:layout_height="match_parent"
+            android:entries="@array/currency_array"
             android:prompt="@string/main.spinner.currency_prompt" />
 
         <EditText
-            android:id="@+id/firstCurr"
+            android:id="@+id/curr0"
             android:layout_width="150dp"
-            android:layout_height="wrap_content"
+            android:layout_height="match_parent"
             android:inputType="numberDecimal"
             android:lines="1" >
         </EditText>
     </LinearLayout>
 
     <LinearLayout
-        android:id="@+id/secondCurrLayoutId"
+        android:id="@+id/curr1LayoutId"
         android:layout_width="match_parent"
         android:layout_height="50dp"
         android:layout_alignParentTop="true"
@@ -72,19 +51,89 @@
         android:orientation="horizontal" >
 
         <Spinner
-            android:id="@+id/spinnerTo"
-            android:layout_width="80dp"
-            android:layout_height="wrap_content" />
+            android:id="@+id/spinner_1"
+            android:layout_width="100dp"
+            android:layout_height="match_parent" 
+            android:entries="@array/currency_array"/>
 
         <EditText
-            android:id="@+id/secondCurr"
+            android:id="@+id/curr1"
             android:layout_width="150dp"
-            android:layout_height="wrap_content"
+            android:layout_height="match_parent"
+            android:inputType="numberDecimal"
+            android:lines="1" >
+        </EditText>
+    </LinearLayout>
+    
+	<LinearLayout
+        android:id="@+id/curr2LayoutId"
+        android:layout_width="match_parent"
+        android:layout_height="50dp"
+        android:layout_alignParentTop="true"
+        android:fitsSystemWindows="false"
+        android:orientation="horizontal" >
+
+        <Spinner
+            android:id="@+id/spinner_2"
+            android:layout_width="100dp"
+            android:layout_height="match_parent" 
+            android:entries="@array/currency_array"/>
+
+        <EditText
+            android:id="@+id/curr2"
+            android:layout_width="150dp"
+            android:layout_height="match_parent"
             android:inputType="numberDecimal"
             android:lines="1" >
         </EditText>
     </LinearLayout>
 
+	<LinearLayout
+        android:id="@+id/curr3LayoutId"
+        android:layout_width="match_parent"
+        android:layout_height="50dp"
+        android:layout_alignParentTop="true"
+        android:fitsSystemWindows="false"
+        android:orientation="horizontal" >
+
+        <Spinner
+            android:id="@+id/spinner_3"
+            android:layout_width="100dp"
+            android:layout_height="match_parent" 
+            android:entries="@array/currency_array"/>
+
+        <EditText
+            android:id="@+id/curr3"
+            android:layout_width="150dp"
+            android:layout_height="match_parent"
+            android:inputType="numberDecimal"
+            android:lines="1" >
+        </EditText>
+    </LinearLayout>
+
+	<LinearLayout
+        android:id="@+id/curr4LayoutId"
+        android:layout_width="match_parent"
+        android:layout_height="50dp"
+        android:layout_alignParentTop="true"
+        android:fitsSystemWindows="false"
+        android:orientation="horizontal" >
+
+        <Spinner
+            android:id="@+id/spinner_4"
+            android:layout_width="100dp"
+            android:layout_height="wrap_content" 
+            android:entries="@array/currency_array"/>
+
+        <EditText
+            android:id="@+id/curr4"
+            android:layout_width="150dp"
+            android:layout_height="match_parent"
+            android:inputType="numberDecimal"
+            android:lines="1" >
+        </EditText>
+    </LinearLayout>
+	
     <LinearLayout
         android:layout_width="match_parent"
         android:layout_height="wrap_content" >
