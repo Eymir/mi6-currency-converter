@@ -34,6 +34,7 @@ import android.widget.Button;
 import android.widget.CheckBox;
 import android.widget.EditText;
 import android.widget.FrameLayout;
+import android.widget.ProgressBar;
 import android.widget.Spinner;
 import android.widget.TextView;
 import android.widget.Toast;
@@ -43,7 +44,9 @@ import com.mi6.currencyconverter.dto.CurrencyDetails;
 import com.mi6.currencyconverter.dto.RateValues;
 
 public class CurrencyConverter extends Activity implements OnClickListener {
-    /** Called when the activity is first created. */
+    private static final int TIMER_RUNTIME = 5000;
+
+	/** Called when the activity is first created. */
 	
 	private List<Double> liveRates;
 	
@@ -51,6 +54,7 @@ public class CurrencyConverter extends Activity implements OnClickListener {
 	private Button convert;
 	private Spinner spinner0, spinner1, spinner2, spinner3, spinner4;
 	private CheckBox onlineRates;
+	ProgressBar progressBar;
 	
 	private AlertDialog alertDialog;
 	private Button alertButton;
@@ -103,6 +107,14 @@ public class CurrencyConverter extends Activity implements OnClickListener {
         spinner3 = (Spinner) findViewById(R.id.spinner_3);
         spinner4 = (Spinner) findViewById(R.id.spinner_4);
         
+        spinner0.setSelection(0);
+        spinner1.setSelection(1);
+        spinner2.setSelection(2);
+        spinner3.setSelection(3);
+        spinner4.setSelection(4);
+        
+        progressBar = (ProgressBar)findViewById(R.id.progressBar);
+        
         convert = (Button)this.findViewById(R.id.convert);        
         convert.setOnClickListener(this);
         onlineRates = (CheckBox)findViewById(R.id.onlineRates);
@@ -132,10 +144,16 @@ public class CurrencyConverter extends Activity implements OnClickListener {
 			currencyDetails = getCurencyDetails(mainCurrency);
 			valueToConvert = getMainFieldData();
 			curr0.setText(convertSingleValue(currencyDetails, (String)spinner0.getSelectedItem(), valueToConvert));
+			updateProgress(1000);
 			curr1.setText(convertSingleValue(currencyDetails, (String)spinner1.getSelectedItem(), valueToConvert));
+			updateProgress(2000);
 			curr2.setText(convertSingleValue(currencyDetails, (String)spinner2.getSelectedItem(), valueToConvert));
+			updateProgress(3000);
 			curr3.setText(convertSingleValue(currencyDetails, (String)spinner3.getSelectedItem(), valueToConvert));
+			updateProgress(4000);
 			curr4.setText(convertSingleValue(currencyDetails, (String)spinner4.getSelectedItem(), valueToConvert));
+			updateProgress(5000);
+			updateProgress(0);
 		}
 
 
@@ -252,10 +270,16 @@ public class CurrencyConverter extends Activity implements OnClickListener {
 	    	String baseURL = "http://finance.yahoo.com/d/quotes.csv?e=goog.csv&f=sl1&s=";
 	    	
 	    	liveRates.add(getOnlineRate(baseURL+mainCurrency+(String) spinner0.getSelectedItem()+"=x"));
+	    	updateProgress(1000);
 	    	liveRates.add(getOnlineRate(baseURL+mainCurrency+(String) spinner1.getSelectedItem()+"=x"));
+	    	updateProgress(2000);
 	    	liveRates.add(getOnlineRate(baseURL+mainCurrency+(String) spinner2.getSelectedItem()+"=x"));
+	    	updateProgress(3000);
 	    	liveRates.add(getOnlineRate(baseURL+mainCurrency+(String) spinner3.getSelectedItem()+"=x"));
+	    	updateProgress(4000);
 	    	liveRates.add(getOnlineRate(baseURL+mainCurrency+(String) spinner4.getSelectedItem()+"=x"));
+	    	updateProgress(5000);
+	    	updateProgress(0);
 			return null;
 	     
 	    }
@@ -314,7 +338,12 @@ public class CurrencyConverter extends Activity implements OnClickListener {
 	    }
 	}
 
-
+	public void updateProgress(final int timePassed) {
+	       if(null != progressBar) {
+	           final int progress = progressBar.getMax() * timePassed / TIMER_RUNTIME;
+	           progressBar.setProgress(progress);
+	       }
+	}
 
 	@Override
 	public void onClick(View v) {
