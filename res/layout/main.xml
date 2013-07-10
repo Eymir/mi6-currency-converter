@@ -18,6 +18,22 @@
 
 
     <LinearLayout
+        android:id="@+id/progressBarLayoutId"
+        android:layout_width="match_parent"
+        android:layout_height="20dp"
+        android:layout_alignParentTop="true"
+        android:fitsSystemWindows="false"
+        android:orientation="horizontal" 
+        android:background="@drawable/background">
+
+        <ProgressBar
+            android:id="@+id/progressBar"
+            style="?android:attr/progressBarStyleHorizontal"
+            android:layout_width="match_parent"
+            android:layout_height="wrap_content" />
+
+    </LinearLayout>
+    <LinearLayout
         android:id="@+id/curr0LayoutId"
         android:layout_width="match_parent"
         android:layout_height="50dp"
