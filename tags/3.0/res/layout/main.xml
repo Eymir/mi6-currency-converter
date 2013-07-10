@@ -1,0 +1,177 @@
+<?xml version="1.0" encoding="utf-8"?>
+
+<RelativeLayout android:id="@+id/RelativeLayout01"
+	android:layout_width="fill_parent" android:layout_height="fill_parent"
+	xmlns:android="http://schemas.android.com/apk/res/android">
+	
+<LinearLayout
+    android:id="@+id/linearlayoutId"
+    android:layout_width="350dp"
+    android:layout_height="550dp"
+    android:layout_alignParentTop="true"
+    android:animateLayoutChanges="true"
+    android:clipChildren="true"
+    android:clipToPadding="true"
+    android:fitsSystemWindows="false"
+    android:orientation="vertical" >
+
+
+
+    <LinearLayout
+        android:id="@+id/progressBarLayoutId"
+        android:layout_width="match_parent"
+        android:layout_height="20dp"
+        android:layout_alignParentTop="true"
+        android:fitsSystemWindows="false"
+        android:orientation="horizontal" 
+        android:background="@drawable/background">
+
+        <ProgressBar
+            android:id="@+id/progressBar"
+            style="?android:attr/progressBarStyleHorizontal"
+            android:layout_width="match_parent"
+            android:layout_height="wrap_content" />
+
+    </LinearLayout>
+    <LinearLayout
+        android:id="@+id/curr0LayoutId"
+        android:layout_width="match_parent"
+        android:layout_height="50dp"
+        android:layout_alignParentTop="true"
+        android:fitsSystemWindows="false"
+        android:orientation="horizontal" 
+        android:background="@drawable/background">
+
+        <Spinner
+            android:id="@+id/spinner_0"
+            android:layout_width="100dp"
+            android:layout_height="match_parent"
+            android:entries="@array/currency_array"
+            android:prompt="@string/main.spinner.currency_prompt" />
+
+        <EditText
+            android:id="@+id/curr0"
+            android:layout_width="150dp"
+            android:layout_height="match_parent"
+            android:inputType="numberDecimal"
+            android:lines="1" >
+        </EditText>
+    </LinearLayout>
+
+    <LinearLayout
+        android:id="@+id/curr1LayoutId"
+        android:layout_width="match_parent"
+        android:layout_height="50dp"
+        android:layout_alignParentTop="true"
+        android:fitsSystemWindows="false"
+        android:orientation="horizontal" >
+
+        <Spinner
+            android:id="@+id/spinner_1"
+            android:layout_width="100dp"
+            android:layout_height="match_parent" 
+            android:entries="@array/currency_array"/>
+
+        <EditText
+            android:id="@+id/curr1"
+            android:layout_width="150dp"
+            android:layout_height="match_parent"
+            android:inputType="numberDecimal"
+            android:lines="1" >
+        </EditText>
+    </LinearLayout>
+    
+	<LinearLayout
+        android:id="@+id/curr2LayoutId"
+        android:layout_width="match_parent"
+        android:layout_height="50dp"
+        android:layout_alignParentTop="true"
+        android:fitsSystemWindows="false"
+        android:orientation="horizontal" >
+
+        <Spinner
+            android:id="@+id/spinner_2"
+            android:layout_width="100dp"
+            android:layout_height="match_parent" 
+            android:entries="@array/currency_array"/>
+
+        <EditText
+            android:id="@+id/curr2"
+            android:layout_width="150dp"
+            android:layout_height="match_parent"
+            android:inputType="numberDecimal"
+            android:lines="1" >
+        </EditText>
+    </LinearLayout>
+
+	<LinearLayout
+        android:id="@+id/curr3LayoutId"
+        android:layout_width="match_parent"
+        android:layout_height="50dp"
+        android:layout_alignParentTop="true"
+        android:fitsSystemWindows="false"
+        android:orientation="horizontal" >
+
+        <Spinner
+            android:id="@+id/spinner_3"
+            android:layout_width="100dp"
+            android:layout_height="match_parent" 
+            android:entries="@array/currency_array"/>
+
+        <EditText
+            android:id="@+id/curr3"
+            android:layout_width="150dp"
+            android:layout_height="match_parent"
+            android:inputType="numberDecimal"
+            android:lines="1" >
+        </EditText>
+    </LinearLayout>
+
+	<LinearLayout
+        android:id="@+id/curr4LayoutId"
+        android:layout_width="match_parent"
+        android:layout_height="50dp"
+        android:layout_alignParentTop="true"
+        android:fitsSystemWindows="false"
+        android:orientation="horizontal" >
+
+        <Spinner
+            android:id="@+id/spinner_4"
+            android:layout_width="100dp"
+            android:layout_height="wrap_content" 
+            android:entries="@array/currency_array"/>
+
+        <EditText
+            android:id="@+id/curr4"
+            android:layout_width="150dp"
+            android:layout_height="match_parent"
+            android:inputType="numberDecimal"
+            android:lines="1" >
+        </EditText>
+    </LinearLayout>
+	
+    <LinearLayout
+        android:layout_width="match_parent"
+        android:layout_height="wrap_content" >
+
+        <CheckBox
+            android:id="@+id/onlineRates"
+            android:layout_width="wrap_content"
+            android:layout_height="34dp"
+            android:text="Use Online Rates" />
+
+    </LinearLayout>
+
+</LinearLayout>
+
+<Button
+    android:id="@+id/convert"
+    android:layout_width="300dp"
+    android:layout_height="wrap_content"
+    android:layout_alignParentBottom="true"
+    android:layout_centerHorizontal="true"
+    android:layout_marginBottom="22dp"
+    android:text="Convert"
+    android:onClick="convertAction" />
+
+</RelativeLayout>
