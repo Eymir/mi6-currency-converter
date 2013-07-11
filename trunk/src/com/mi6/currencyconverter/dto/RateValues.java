@@ -1,10 +1,19 @@
 package com.mi6.currencyconverter.dto;
 
+import java.sql.Date;
+
 public class RateValues {
 
 	private String name;
 	private Double unitsPerCurrency;
-	private Double currencyPerUnit;
+	private Date cacheDate;
+	
+	public Date getCacheDate() {
+		return cacheDate;
+	}
+	public void setCacheDate(Date cacheDate) {
+		this.cacheDate = cacheDate;
+	}
 	public String getName() {
 		return name;
 	}
@@ -17,13 +26,4 @@ public class RateValues {
 	public void setUnitsPerCurrency(Double unitsPerCurrency) {
 		this.unitsPerCurrency = unitsPerCurrency;
 	}
-	public Double getCurrencyPerUnit() {
-		return currencyPerUnit;
-	}
-	public void setCurrencyPerUnit(Double currencyPerUnit) {
-		this.currencyPerUnit = currencyPerUnit;
-	}
-	
-	
-	
 }
