@@ -6,6 +6,7 @@ import java.io.InputStream;
 import java.io.InputStreamReader;
 import java.net.URI;
 import java.net.URISyntaxException;
+import java.sql.Date;
 import java.text.DecimalFormat;
 import java.util.ArrayList;
 import java.util.List;
@@ -17,6 +18,9 @@ import org.apache.http.client.ClientProtocolException;
 import org.apache.http.client.HttpClient;
 import org.apache.http.client.methods.HttpGet;
 import org.apache.http.impl.client.DefaultHttpClient;
+import org.json.JSONArray;
+import org.json.JSONException;
+import org.json.JSONObject;
 
 import android.app.Activity;
 import android.app.AlertDialog;
@@ -267,17 +271,17 @@ public class CurrencyConverter extends Activity implements OnClickListener {
 			
 	    	liveRates = new ArrayList<Double>();
 	    	String mainCurrency = getMainCurrency();
-	    	String baseURL = "http://finance.yahoo.com/d/quotes.csv?e=goog.csv&f=sl1&s=";
 	    	
-	    	liveRates.add(getOnlineRate(baseURL+mainCurrency+(String) spinner0.getSelectedItem()+"=x"));
+	    	
+	    	liveRates.add(getOnlineRate(mainCurrency,(String) spinner0.getSelectedItem()));
 	    	updateProgress(1000);
-	    	liveRates.add(getOnlineRate(baseURL+mainCurrency+(String) spinner1.getSelectedItem()+"=x"));
+	    	liveRates.add(getOnlineRate(mainCurrency,(String) spinner1.getSelectedItem()));
 	    	updateProgress(2000);
-	    	liveRates.add(getOnlineRate(baseURL+mainCurrency+(String) spinner2.getSelectedItem()+"=x"));
+	    	liveRates.add(getOnlineRate(mainCurrency,(String) spinner2.getSelectedItem()));
 	    	updateProgress(3000);
-	    	liveRates.add(getOnlineRate(baseURL+mainCurrency+(String) spinner3.getSelectedItem()+"=x"));
+	    	liveRates.add(getOnlineRate(mainCurrency,(String) spinner3.getSelectedItem()));
 	    	updateProgress(4000);
-	    	liveRates.add(getOnlineRate(baseURL+mainCurrency+(String) spinner4.getSelectedItem()+"=x"));
+	    	liveRates.add(getOnlineRate(mainCurrency,(String) spinner4.getSelectedItem()));
 	    	updateProgress(5000);
 	    	updateProgress(0);
 			return null;
@@ -285,15 +289,20 @@ public class CurrencyConverter extends Activity implements OnClickListener {
 	    }
 
 
-		private Double getOnlineRate(String url) {
+		private Double getOnlineRate(String fromCurrency, String toCurrency) {
 			
+			String baseURL1 = "http://query.yahooapis.com/v1/public/yql?q=select%20id%2C%20Rate%2C%20Date%20from%20yahoo.finance.xchange%20where%20pair%20in%20(%22";
+			String baseURL2 = "%22)&format=json&diagnostics=false&env=store%3A%2F%2Fdatatables.org%2Falltableswithkeys&callback=";
 			String line = null;
+			String result = null;
+			Double rate = null;
+			CurrencyDetails currencyDetails = new CurrencyDetails();
 			HttpClient httpClient = new DefaultHttpClient();
 			//HttpHost proxy = new HttpHost("172.17.0.10", 8080);
 			//httpClient.getParams().setParameter(ConnRoutePNames.DEFAULT_PROXY, proxy);
 			HttpGet httpGet = new HttpGet();
 			try {
-				httpGet.setURI(new URI(url));
+				httpGet.setURI(new URI(baseURL1+fromCurrency+toCurrency+baseURL2));
 			} catch (URISyntaxException e1) {
 				// TODO Auto-generated catch block
 				e1.printStackTrace();
@@ -306,19 +315,66 @@ public class CurrencyConverter extends Activity implements OnClickListener {
                 if (statusCode == 200) {
                         HttpEntity entity = response.getEntity();
                         InputStream content = entity.getContent();
-                        BufferedReader reader = new BufferedReader(
-                                        new InputStreamReader(content));
-                        line = reader.readLine();
-                        line = line.subSequence(11, line.length()).toString();
+                        BufferedReader reader = new BufferedReader(new InputStreamReader(content));
+                        StringBuilder sBuilder = new StringBuilder();
+                        while ((line = reader.readLine()) != null) {
+                            sBuilder.append(line + "\n");
+                        }
+                        reader.close();
+                        result = sBuilder.toString();
+                        currencyDetails = getCurrencyDetailsFromJSON(result);
+                        rate = currencyDetails.getRateValues().get(0).getUnitsPerCurrency();
                 } else {
-                        Log.e("Getter", "Failed to download file");
+                        Log.e("Getter", "Failed to get response");
                 }
         } catch (ClientProtocolException e) {
                 e.printStackTrace();
         } catch (IOException e) {
                 e.printStackTrace();
         }
-			return Double.parseDouble(line);
+			return rate;
+		}
+		
+		private CurrencyDetails getCurrencyDetailsFromJSON(String sJSON){
+			
+			//parse JSON data
+			CurrencyDetails currencyDetails = new CurrencyDetails();
+	        try{
+	        	Object results = new JSONObject(sJSON).getJSONObject("query").getJSONObject("results").get("rate");
+	        	if (results instanceof JSONObject) {
+	        		JSONObject rateObject = (JSONObject) results;
+	        		Log.d("JSON", "there is just one rate");
+	        		String fromCurrency = null;
+	        		RateValues rv = new RateValues();
+	        		List<RateValues> rvList = new ArrayList<RateValues>();
+	                fromCurrency = rateObject.getString("id").subSequence(0, 3).toString();
+	                rv.setName(rateObject.getString("id").subSequence(3, 6).toString());
+	                rv.setUnitsPerCurrency(rateObject.getDouble("Rate"));
+	                //rv.setCacheDate(Date.valueOf(rateObject.getString("Date")));
+	                rvList.add(rv);
+	                currencyDetails.setName(fromCurrency);
+		            currencyDetails.setRateValues(rvList);
+	        	} else {
+	        	JSONArray jsonData = (JSONArray) results;
+	            String fromCurrency = null;
+	            List<RateValues> rvList = new ArrayList<RateValues>();
+		            for (int i=0; i<jsonData.length(); i++) {
+		            	RateValues rv = new RateValues();
+		                JSONObject item = jsonData.getJSONObject(i);
+		                fromCurrency = item.getString("id").subSequence(0, 3).toString();
+		                rv.setName(item.getString("id").subSequence(3, 6).toString());
+		                rv.setUnitsPerCurrency(item.getDouble("Rate"));
+		                //rv.setCacheDate(Date.valueOf(item.getString("Date")));
+		                rvList.add(rv);
+		            }
+		            
+		            currencyDetails.setName(fromCurrency);
+		            currencyDetails.setRateValues(rvList);
+	        	}
+	        } catch (JSONException e) {
+	            Log.e("JSONException", "Error: " + e.toString());
+	        } 
+			return currencyDetails;
 		}
 	    
 	    
