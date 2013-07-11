@@ -150,17 +150,7 @@
         </EditText>
     </LinearLayout>
 	
-    <LinearLayout
-        android:layout_width="match_parent"
-        android:layout_height="wrap_content" >
 
-        <CheckBox
-            android:id="@+id/onlineRates"
-            android:layout_width="wrap_content"
-            android:layout_height="34dp"
-            android:text="Use Online Rates" />
-
-    </LinearLayout>
 
 </LinearLayout>
 
