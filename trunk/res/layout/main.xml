@@ -13,7 +13,9 @@
     android:clipChildren="true"
     android:clipToPadding="true"
     android:fitsSystemWindows="false"
-    android:orientation="vertical" >
+    android:orientation="vertical"
+    android:layout_alignParentRight="true"
+    android:layout_alignParentLeft="true">
 
     <LinearLayout
         android:id="@+id/curr0LayoutId"
@@ -136,7 +138,15 @@
             android:lines="1" >
         </EditText>
     </LinearLayout>
-	
+
+    <ProgressBar
+            android:layout_width="wrap_content"
+            android:layout_height="wrap_content"
+            android:id="@+id/progressBar"
+            android:layout_gravity="center"
+            android:layout_marginBottom="2dp"
+            android:indeterminate="true"
+            android:visibility="gone"/>
 
 
 </LinearLayout>
@@ -151,17 +161,5 @@
 		    android:layout_marginBottom="22dp"
 		    android:text="Convert"
 		    android:onClick="convertAction" />
-
-	<ProgressBar
-            android:id="@+id/progressBar"
-            style="?android:attr/progressBarStyle"
-            android:layout_width="50dp"
-            android:layout_height="50dp"
-            android:layout_centerHorizontal="true"
-            android:layout_centerVertical="true"
-            android:visibility="gone"
-            android:indeterminate="true"
-            android:indeterminateDrawable="@drawable/progress" >
-    </ProgressBar>
 
 </RelativeLayout>
