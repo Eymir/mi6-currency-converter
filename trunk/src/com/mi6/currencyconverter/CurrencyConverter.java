@@ -6,6 +6,7 @@ import java.util.List;
 
 import android.app.Activity;
 import android.app.AlertDialog;
+import android.app.ProgressDialog;
 import android.content.Context;
 import android.net.ConnectivityManager;
 import android.net.NetworkInfo;
@@ -138,8 +139,6 @@ public class CurrencyConverter extends Activity implements OnClickListener {
 			updateProgress(5000);
 			updateProgress(0);
 		}
-
-
 	}
 
 	private String getMainCurrency(){
@@ -244,7 +243,12 @@ public class CurrencyConverter extends Activity implements OnClickListener {
 	}
 	
 	private class GetLiveRatesTask extends AsyncTask<Void, Void, Void>{
-	    	    
+	    	  
+		@Override
+	    protected void onPreExecute(){
+	        progressBar.setVisibility(View.VISIBLE);
+	    }
+		
 	    @Override
 	    public Void doInBackground(Void... params) {
 			
@@ -293,7 +297,7 @@ public class CurrencyConverter extends Activity implements OnClickListener {
 				curr3.setText(convertOnlineSingleValue(liveRates.get(3), valueToConvert));
 				curr4.setText(convertOnlineSingleValue(liveRates.get(4), valueToConvert));
 			}
-	    	
+	    	progressBar.setVisibility(View.GONE);
 			super.onPostExecute(result);   
 	    }
 	}
@@ -316,6 +320,11 @@ public class CurrencyConverter extends Activity implements OnClickListener {
 	          = (ConnectivityManager) getSystemService(Context.CONNECTIVITY_SERVICE);
 	    NetworkInfo activeNetworkInfo = connectivityManager.getActiveNetworkInfo();
 	    return activeNetworkInfo != null && activeNetworkInfo.isConnected();
+	}
+	
+	public void TextFieldClicked(View view){      
+		EditText editText = (EditText)view;
+		editText.setText("");
 	}
 	
 }
