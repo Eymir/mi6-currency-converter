@@ -2,6 +2,7 @@ package com.mi6.currencyconverter;
 
 import java.text.DecimalFormat;
 import java.util.ArrayList;
+import java.util.Arrays;
 import java.util.List;
 
 import android.app.Activity;
@@ -49,9 +50,11 @@ public class CurrencyConverter extends Activity implements OnClickListener {
     public void onCreate(Bundle savedInstanceState) {
         super.onCreate(savedInstanceState);
         setContentView(R.layout.main);
-        
         addMainLayout();
         addAlertDialog();
+        if (isNetworkAvailable()) {
+        	new CacheRates().execute();
+        }
     	
     }
 
@@ -280,12 +283,6 @@ public class CurrencyConverter extends Activity implements OnClickListener {
 	     
 	    }
 
-
-
-		
-
-	    
-	    
 	    @Override
 	    protected void onPostExecute(Void result) {
 	    	Double valueToConvert;
@@ -301,6 +298,18 @@ public class CurrencyConverter extends Activity implements OnClickListener {
 			super.onPostExecute(result);   
 	    }
 	}
+	
+	private class CacheRates extends AsyncTask<Void, Void, Void>{
+		
+	    @Override
+	    public Void doInBackground(Void... params) {
+			
+	    	CurrencyConverterUtil.CacheRates(getApplicationContext(), Arrays.asList(CurrencyConverterUtil.CURRENCY_LIST));
+			return null;
+	     
+	    }
+
+	}
 
 	public void updateProgress(final int timePassed) {
 	       if(null != progressBar) {
@@ -315,7 +324,7 @@ public class CurrencyConverter extends Activity implements OnClickListener {
 		
 	}
 	
-	private boolean isNetworkAvailable() {
+	public boolean isNetworkAvailable() {
 	    ConnectivityManager connectivityManager 
 	          = (ConnectivityManager) getSystemService(Context.CONNECTIVITY_SERVICE);
 	    NetworkInfo activeNetworkInfo = connectivityManager.getActiveNetworkInfo();
