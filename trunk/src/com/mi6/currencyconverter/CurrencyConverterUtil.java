@@ -1,6 +1,9 @@
 package com.mi6.currencyconverter;
 
 import java.io.BufferedReader;
+import java.io.FileInputStream;
+import java.io.FileNotFoundException;
+import java.io.FileOutputStream;
 import java.io.IOException;
 import java.io.InputStream;
 import java.io.InputStreamReader;
@@ -8,6 +11,7 @@ import java.net.URI;
 import java.net.URISyntaxException;
 import java.sql.Date;
 import java.util.ArrayList;
+import java.util.Arrays;
 import java.util.List;
 
 import org.apache.http.HttpEntity;
@@ -32,14 +36,24 @@ import com.mi6.currencyconverter.dto.RateValues;
 
 public class CurrencyConverterUtil {
 	
+	public static final String[] CURRENCY_LIST = {"EUR","GBP","HUF","RON","USD"}; 
+	
 	public static final CurrencyDetails ReadCurrencyDetailsFromCsv(Context context, String currencyName) {
-		  CurrencyDetails currencyDetails = new CurrencyDetails();
-		  List<RateValues> rvList = new ArrayList<RateValues>(); 
-		  AssetManager assetManager = context.getAssets();
+		
+		String filename = currencyName;
+		FileInputStream fis = null;
+		CurrencyDetails currencyDetails = new CurrencyDetails();
+		List<RateValues> rvList = new ArrayList<RateValues>();
+		
+		try {
+			fis = context.openFileInput(filename);
+		} catch (FileNotFoundException e1) {
+			e1.printStackTrace();
+		}
+		
 
 		  try {
-		    InputStream csvStream = assetManager.open("currency_rates/"+currencyName+".csv");
-		    InputStreamReader csvStreamReader = new InputStreamReader(csvStream);
+		    InputStreamReader csvStreamReader = new InputStreamReader(fis);
 		    CSVReader csvReader = new CSVReader(csvStreamReader);
 		    currencyDetails.setName(currencyName);
 		    String[] line;
@@ -57,6 +71,39 @@ public class CurrencyConverterUtil {
 		  }
 		  return currencyDetails;
 		}
+	
+	public static final boolean WriteCurrencyDetailsToCsv(Context context, CurrencyDetails currDetails) {
+		boolean writeStatus = false;
+		String filename = currDetails.getName();
+		FileOutputStream fos = null;
+		String detailsToWrite = "";
+		
+		List<RateValues> rv = currDetails.getRateValues();
+		
+		for(RateValues rates:rv) {
+			detailsToWrite = detailsToWrite 
+							+ rates.getName() 
+							+ "," 
+							+ rates.getUnitsPerCurrency() 
+							+ "," + rates.getCacheDate() 
+							+ System.getProperty("line.separator");
+		}
+		
+		try {
+			fos = context.openFileOutput(filename, Context.MODE_PRIVATE);
+			fos.write(detailsToWrite.getBytes());
+			fos.close();
+			writeStatus = true;
+		} catch (FileNotFoundException e) {
+			e.printStackTrace();
+			writeStatus = false;
+		} catch (IOException e) {
+			e.printStackTrace();
+			writeStatus = false;
+		}
+		
+		return writeStatus;
+	}
 	
 	private static RateValues ReadValuesFromLine(String[] line) {
 		RateValues rv = new RateValues();
@@ -160,6 +207,16 @@ public class CurrencyConverterUtil {
             Log.e("JSONException", "Error: " + e.toString());
         } 
 		return currencyDetails;
+	}
+	
+	public static boolean CacheRates(Context context, List <String> currencies) {
+		boolean cacheStatus = false;
+		for (String curr:currencies) {
+			CurrencyDetails currDetails = getOnlineRates(curr, Arrays.asList(CURRENCY_LIST));
+			WriteCurrencyDetailsToCsv(context, currDetails);
+		}
+		
+		return cacheStatus;
 	}
 	
 }
