@@ -9,10 +9,13 @@ import java.io.InputStream;
 import java.io.InputStreamReader;
 import java.net.URI;
 import java.net.URISyntaxException;
-import java.sql.Date;
+import java.text.SimpleDateFormat;
 import java.util.ArrayList;
 import java.util.Arrays;
+import java.util.GregorianCalendar;
 import java.util.List;
+import java.util.Locale;
+import java.util.TimeZone;
 
 import org.apache.http.HttpEntity;
 import org.apache.http.HttpResponse;
@@ -26,7 +29,6 @@ import org.json.JSONException;
 import org.json.JSONObject;
 
 import android.content.Context;
-import android.content.res.AssetManager;
 import android.util.Log;
 import au.com.bytecode.opencsv.CSVReader;
 
@@ -211,12 +213,28 @@ public class CurrencyConverterUtil {
 	
 	public static boolean CacheRates(Context context, List <String> currencies) {
 		boolean cacheStatus = false;
+		Log.i("CacheRates", "Start caching rates at:" + GetFormatedCurrentTime());
 		for (String curr:currencies) {
 			CurrencyDetails currDetails = getOnlineRates(curr, Arrays.asList(CURRENCY_LIST));
 			WriteCurrencyDetailsToCsv(context, currDetails);
 		}
+		Log.i("CacheRates", "End caching rates at:" + GetFormatedCurrentTime());
 		
 		return cacheStatus;
+	}
+	
+	
+	public static String GetFormatedCurrentTime() {
+
+		long timeInMillis = System.currentTimeMillis();
+		
+        SimpleDateFormat sdf = new SimpleDateFormat("yyyy-MM-dd HH:mm:ss,SSS",Locale.getDefault());
+
+        GregorianCalendar calendar = new GregorianCalendar(TimeZone.getTimeZone("EEST"));
+        calendar.setTimeInMillis(timeInMillis);
+        
+        return sdf.format(calendar.getTime());
+		
 	}
 	
 }

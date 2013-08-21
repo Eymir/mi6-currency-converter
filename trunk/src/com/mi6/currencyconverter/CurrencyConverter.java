@@ -7,8 +7,9 @@ import java.util.List;
 
 import android.app.Activity;
 import android.app.AlertDialog;
-import android.app.ProgressDialog;
 import android.content.Context;
+import android.graphics.Color;
+import android.graphics.Typeface;
 import android.net.ConnectivityManager;
 import android.net.NetworkInfo;
 import android.os.AsyncTask;
@@ -20,11 +21,11 @@ import android.view.MenuItem;
 import android.view.View;
 import android.view.View.OnClickListener;
 import android.widget.Button;
-import android.widget.CheckBox;
 import android.widget.EditText;
 import android.widget.FrameLayout;
 import android.widget.ProgressBar;
 import android.widget.Spinner;
+import android.widget.TextView;
 import android.widget.Toast;
 
 import com.mi6.currencyconverter.dto.CurrencyDetails;
@@ -40,6 +41,7 @@ public class CurrencyConverter extends Activity implements OnClickListener {
 	private EditText curr0, curr1, curr2, curr3, curr4;
 	private Button convert;
 	private Spinner spinner0, spinner1, spinner2, spinner3, spinner4;
+	private int defaultTextColor;
 	ProgressBar progressBar;
 	
 	private AlertDialog alertDialog;
@@ -103,6 +105,8 @@ public class CurrencyConverter extends Activity implements OnClickListener {
         
         convert = (Button)this.findViewById(R.id.convert);        
         convert.setOnClickListener(this);
+        
+        defaultTextColor = curr0.getTextColors().getDefaultColor();
 	}
 	   
 	public void convertAction(View view) {
@@ -112,6 +116,7 @@ public class CurrencyConverter extends Activity implements OnClickListener {
 				alertDialog.setMessage((String)this.getString(R.string.alertDialog_messages_add_value_in_field));
 		        alertDialog.show();
 			} else {
+				changeTextColorForMainField();
 				mainCurrency = getMainCurrency();
 				convert(mainCurrency);
 				}
@@ -123,9 +128,11 @@ public class CurrencyConverter extends Activity implements OnClickListener {
 			new GetLiveRatesTask().execute();
 			
 		} else {
-			alertDialog.setMessage((String)this.getString(R.string.alertDialog_messages_no_internet_connection));
-	        alertDialog.show();
-	        
+			
+			Toast.makeText(this, 
+					R.string.alertDialog_messages_no_internet_connection,
+        			Toast.LENGTH_LONG).show();
+				        
 			Double valueToConvert;
 			CurrencyDetails currencyDetails;
 			currencyDetails = getCurencyDetails(mainCurrency);
@@ -335,5 +342,30 @@ public class CurrencyConverter extends Activity implements OnClickListener {
 		EditText editText = (EditText)view;
 		editText.setText("");
 	}
+	
+	public void changeTextColorForMainField() {
+		
+		EditText currentSelectedItem = (EditText)getWindow().getCurrentFocus();
+		setTextColorToDefault();
+		currentSelectedItem.setTextColor(Color.RED);
+		currentSelectedItem.setTypeface(null,Typeface.BOLD);
+		
+	}
+	
+	private void setTextColorToDefault() {
+		
+		curr0.setTextColor(defaultTextColor);
+		curr0.setTypeface(null,Typeface.NORMAL);
+		curr1.setTextColor(defaultTextColor);
+		curr1.setTypeface(null,Typeface.NORMAL);
+		curr2.setTextColor(defaultTextColor);
+		curr2.setTypeface(null,Typeface.NORMAL);
+		curr3.setTextColor(defaultTextColor);
+		curr3.setTypeface(null,Typeface.NORMAL);
+		curr4.setTextColor(defaultTextColor);
+		curr4.setTypeface(null,Typeface.NORMAL);
+		
+	}
+	
 	
 }
