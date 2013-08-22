@@ -1,0 +1,27 @@
+<?xml version="1.0" encoding="utf-8"?>
+	
+	
+	<LinearLayout xmlns:android="http://schemas.android.com/apk/res/android"
+	        android:id="@+id/currLayoutId"
+	        android:layout_width="match_parent"
+	        android:layout_height="50dp"
+	        android:fitsSystemWindows="false"
+	        android:orientation="horizontal">
+	
+	        <Spinner
+	            android:id="@+id/spinner"
+	            android:layout_width="100dp"
+	            android:layout_height="match_parent"
+	            android:entries="@array/currency_array"
+	            android:prompt="@string/main.spinner.currency_prompt" />
+	
+	        <EditText
+	            android:id="@+id/curr"
+	            android:onClick="TextFieldClicked"
+	            android:layout_width="150dp"
+	            android:layout_height="match_parent"
+	            android:inputType="numberDecimal"
+	            android:lines="1" >
+	        </EditText>
+	</LinearLayout>
+
