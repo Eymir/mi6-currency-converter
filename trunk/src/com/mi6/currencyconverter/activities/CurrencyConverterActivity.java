@@ -1,4 +1,4 @@
-package com.mi6.currencyconverter;
+package com.mi6.currencyconverter.activities;
 
 import java.text.DecimalFormat;
 import java.util.ArrayList;
@@ -23,24 +23,28 @@ import android.view.View.OnClickListener;
 import android.widget.Button;
 import android.widget.EditText;
 import android.widget.FrameLayout;
+import android.widget.LinearLayout;
 import android.widget.ProgressBar;
-import android.widget.Spinner;
-import android.widget.TextView;
 import android.widget.Toast;
 
+import com.mi6.currencyconverter.CurrencyBoxView;
+import com.mi6.currencyconverter.CurrencyConverterUtil;
+import com.mi6.currencyconverter.R;
+import com.mi6.currencyconverter.R.id;
+import com.mi6.currencyconverter.R.layout;
+import com.mi6.currencyconverter.R.string;
 import com.mi6.currencyconverter.dto.CurrencyDetails;
 import com.mi6.currencyconverter.dto.RateValues;
 
-public class CurrencyConverter extends Activity implements OnClickListener {
+public class CurrencyConverterActivity extends Activity implements OnClickListener {
     private static final int TIMER_RUNTIME = 500;
 
 	/** Called when the activity is first created. */
 	
 	private List<Double> liveRates;
 	
-	private EditText curr0, curr1, curr2, curr3, curr4;
+	private List<CurrencyBoxView> boxViewList = new ArrayList<CurrencyBoxView>();
 	private Button convert;
-	private Spinner spinner0, spinner1, spinner2, spinner3, spinner4;
 	private int defaultTextColor;
 	ProgressBar progressBar;
 	
@@ -51,7 +55,7 @@ public class CurrencyConverter extends Activity implements OnClickListener {
     @Override
     public void onCreate(Bundle savedInstanceState) {
         super.onCreate(savedInstanceState);
-        setContentView(R.layout.main);
+        setContentView(R.layout.currency_converter_layout);
         addMainLayout();
         addAlertDialog();
         if (isNetworkAvailable()) {
@@ -62,9 +66,9 @@ public class CurrencyConverter extends Activity implements OnClickListener {
 
 	private void addAlertDialog() {
 		//alert dialog layout
-        AlertDialog.Builder builder = new AlertDialog.Builder(CurrencyConverter.this)
+        AlertDialog.Builder builder = new AlertDialog.Builder(CurrencyConverterActivity.this)
         .setTitle("Alert");
-        final FrameLayout frameView = new FrameLayout(CurrencyConverter.this);
+        final FrameLayout frameView = new FrameLayout(CurrencyConverterActivity.this);
         builder.setView(frameView);
         alertDialog = builder.create();
         LayoutInflater inflater = alertDialog.getLayoutInflater();
@@ -82,31 +86,24 @@ public class CurrencyConverter extends Activity implements OnClickListener {
 	}
 
 	private void addMainLayout() {
-		//main layout
-        curr0 = (EditText)findViewById(R.id.curr0);
-        curr1 = (EditText)findViewById(R.id.curr1);
-        curr2 = (EditText)findViewById(R.id.curr2);
-        curr3 = (EditText)findViewById(R.id.curr3);
-        curr4 = (EditText)findViewById(R.id.curr4);
-        
-        spinner0 = (Spinner) findViewById(R.id.spinner_0);
-        spinner1 = (Spinner) findViewById(R.id.spinner_1);
-        spinner2 = (Spinner) findViewById(R.id.spinner_2);
-        spinner3 = (Spinner) findViewById(R.id.spinner_3);
-        spinner4 = (Spinner) findViewById(R.id.spinner_4);
-        
-        spinner0.setSelection(0);
-        spinner1.setSelection(1);
-        spinner2.setSelection(2);
-        spinner3.setSelection(3);
-        spinner4.setSelection(4);
+		
+		LinearLayout boxLayout=(LinearLayout)findViewById(R.id.boxLinearlayoutId);
+
+		for (int i = 0; i < 5; i++) {
+		
+			CurrencyBoxView currencyBox = new CurrencyBoxView(this.getApplicationContext(),i, getLayoutInflater());
+			boxLayout.addView(currencyBox.getView());
+			
+			boxViewList.add(currencyBox);
+			((CurrencyBoxView)boxViewList.get(i)).getSpinner().setSelection(i);
+		}
         
         progressBar = (ProgressBar)findViewById(R.id.progressBar);
         
         convert = (Button)this.findViewById(R.id.convert);        
         convert.setOnClickListener(this);
         
-        defaultTextColor = curr0.getTextColors().getDefaultColor();
+        defaultTextColor = ((CurrencyBoxView)boxViewList.get(0)).getCurrValueField().getTextColors().getDefaultColor();
 	}
 	   
 	public void convertAction(View view) {
@@ -137,16 +134,11 @@ public class CurrencyConverter extends Activity implements OnClickListener {
 			CurrencyDetails currencyDetails;
 			currencyDetails = getCurencyDetails(mainCurrency);
 			valueToConvert = getMainFieldData();
-			curr0.setText(convertSingleValue(currencyDetails, (String)spinner0.getSelectedItem(), valueToConvert));
-			updateProgress(1000);
-			curr1.setText(convertSingleValue(currencyDetails, (String)spinner1.getSelectedItem(), valueToConvert));
-			updateProgress(2000);
-			curr2.setText(convertSingleValue(currencyDetails, (String)spinner2.getSelectedItem(), valueToConvert));
-			updateProgress(3000);
-			curr3.setText(convertSingleValue(currencyDetails, (String)spinner3.getSelectedItem(), valueToConvert));
-			updateProgress(4000);
-			curr4.setText(convertSingleValue(currencyDetails, (String)spinner4.getSelectedItem(), valueToConvert));
-			updateProgress(5000);
+			
+			for (int i = 0; i < 5; i++) {
+				((CurrencyBoxView)boxViewList.get(i)).getCurrValueField().setText(convertSingleValue(currencyDetails, (String)((CurrencyBoxView)boxViewList.get(i)).getSpinner().getSelectedItem(), valueToConvert));
+				updateProgress(i * 1000);
+			}
 			updateProgress(0);
 		}
 	}
@@ -156,21 +148,14 @@ public class CurrencyConverter extends Activity implements OnClickListener {
 		String currency = null;
 		View currentSelectedItem = getWindow().getCurrentFocus();
 		
-		if (curr0.equals(currentSelectedItem)) {
-			currency = (String)spinner0.getSelectedItem();
+		for (int i = 0; i < 5; i++) {
+			
+			if (((CurrencyBoxView)boxViewList.get(i)).getCurrValueField().equals(currentSelectedItem)) {
+				currency = (String)((CurrencyBoxView)boxViewList.get(i)).getSpinner().getSelectedItem();
+			}
+			
 		}
-		if (curr1.equals(currentSelectedItem)) {
-			currency = (String)spinner1.getSelectedItem();
-		}
-		if (curr2.equals(currentSelectedItem)) {
-			currency = (String)spinner2.getSelectedItem();
-		}
-		if (curr3.equals(currentSelectedItem)) {
-			currency = (String)spinner3.getSelectedItem();
-		}
-		if (curr4.equals(currentSelectedItem)) {
-			currency = (String)spinner4.getSelectedItem();
-		}
+
 		
 		return currency;
 	} 
@@ -266,25 +251,23 @@ public class CurrencyConverter extends Activity implements OnClickListener {
 	    	CurrencyDetails cd = new CurrencyDetails();
 	    	String mainCurrency = getMainCurrency();
 	    	List<String> targetCurrencies = new ArrayList<String>();
-	    	targetCurrencies.add((String)spinner0.getSelectedItem());
-	    	targetCurrencies.add((String)spinner1.getSelectedItem());
-	    	targetCurrencies.add((String)spinner2.getSelectedItem());
-	    	targetCurrencies.add((String)spinner3.getSelectedItem());
-	    	targetCurrencies.add((String)spinner4.getSelectedItem());
+	    	
+	    	for (int i = 0; i < 5; i++) {
+	    		
+	    		targetCurrencies.add((String)((CurrencyBoxView)boxViewList.get(i)).getSpinner().getSelectedItem());
+	    		
+	    	}
 	    	
 	    	updateProgress(100);
 	    	
 	    	cd = CurrencyConverterUtil.getOnlineRates(mainCurrency,targetCurrencies);
 	    	
-	    	liveRates.add(cd.getRateValues().get(0).getUnitsPerCurrency());
-	    	liveRates.add(cd.getRateValues().get(1).getUnitsPerCurrency());
-	    	updateProgress(200);
-	    	liveRates.add(cd.getRateValues().get(2).getUnitsPerCurrency());
-	    	updateProgress(300);
-	    	liveRates.add(cd.getRateValues().get(3).getUnitsPerCurrency());
-	    	updateProgress(400);
-	    	liveRates.add(cd.getRateValues().get(4).getUnitsPerCurrency());
-	    	updateProgress(500);
+	    	for (int i = 0; i < 5; i++) {
+	    		
+	    		liveRates.add(cd.getRateValues().get(i).getUnitsPerCurrency());
+		    	updateProgress(i*100);
+	    		
+	    	}
 	    	updateProgress(0);
 			return null;
 	     
@@ -295,11 +278,11 @@ public class CurrencyConverter extends Activity implements OnClickListener {
 	    	Double valueToConvert;
 			valueToConvert = getMainFieldData();
 	    	if (hasMainFieldData()) {
-	    		curr0.setText(convertOnlineSingleValue(liveRates.get(0), valueToConvert));
-				curr1.setText(convertOnlineSingleValue(liveRates.get(1), valueToConvert));
-				curr2.setText(convertOnlineSingleValue(liveRates.get(2), valueToConvert));
-				curr3.setText(convertOnlineSingleValue(liveRates.get(3), valueToConvert));
-				curr4.setText(convertOnlineSingleValue(liveRates.get(4), valueToConvert));
+	    		for (int i = 0; i < 5; i++) {
+	    			
+	    			((CurrencyBoxView)boxViewList.get(i)).getCurrValueField().setText(convertOnlineSingleValue(liveRates.get(i), valueToConvert));
+	    			
+	    		}
 			}
 	    	progressBar.setVisibility(View.GONE);
 			super.onPostExecute(result);   
@@ -354,16 +337,12 @@ public class CurrencyConverter extends Activity implements OnClickListener {
 	
 	private void setTextColorToDefault() {
 		
-		curr0.setTextColor(defaultTextColor);
-		curr0.setTypeface(null,Typeface.NORMAL);
-		curr1.setTextColor(defaultTextColor);
-		curr1.setTypeface(null,Typeface.NORMAL);
-		curr2.setTextColor(defaultTextColor);
-		curr2.setTypeface(null,Typeface.NORMAL);
-		curr3.setTextColor(defaultTextColor);
-		curr3.setTypeface(null,Typeface.NORMAL);
-		curr4.setTextColor(defaultTextColor);
-		curr4.setTypeface(null,Typeface.NORMAL);
+		for (int i = 0; i < 5; i++) {
+			
+			((CurrencyBoxView)boxViewList.get(i)).getCurrValueField().setTextColor(defaultTextColor);
+			((CurrencyBoxView)boxViewList.get(i)).getCurrValueField().setTypeface(null,Typeface.NORMAL);
+			
+		}
 		
 	}
 	
