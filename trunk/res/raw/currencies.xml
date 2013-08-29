@@ -1,0 +1,9 @@
+<?xml version="1.0" encoding="utf-8"?>
+<currencies>
+		<currency code="RON" name="Romanian Leu" country="Romania" flag="ro"/>
+		<currency code="GBP" name="British Pound" country="United Kingdom" flag="gb"/>
+		<currency code="EUR" name="Euro" country="Europe" flag="eu"/>
+		<currency code="USD" name="United States Dollar" country="United States" flag="us"/>
+		<currency code="HUF" name="Hungarian Forint" country="Hungary" flag="hu"/>
+		<currency code="CHF" name="Swiss Franc" country="Switzerland" flag="ch"/>
+</currencies>
