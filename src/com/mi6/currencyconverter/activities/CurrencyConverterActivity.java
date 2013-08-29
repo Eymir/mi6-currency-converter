@@ -28,13 +28,10 @@ import android.widget.ProgressBar;
 import android.widget.Toast;
 
 import com.mi6.currencyconverter.CurrencyBoxView;
-import com.mi6.currencyconverter.CurrencyConverterUtil;
 import com.mi6.currencyconverter.R;
-import com.mi6.currencyconverter.R.id;
-import com.mi6.currencyconverter.R.layout;
-import com.mi6.currencyconverter.R.string;
 import com.mi6.currencyconverter.dto.CurrencyDetails;
 import com.mi6.currencyconverter.dto.RateValues;
+import com.mi6.currencyconverter.utils.CurrencyConverterUtil;
 
 public class CurrencyConverterActivity extends Activity implements OnClickListener {
     private static final int TIMER_RUNTIME = 500;

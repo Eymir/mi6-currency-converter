@@ -1,4 +1,4 @@
-package com.mi6.currencyconverter;
+package com.mi6.currencyconverter.utils;
 
 import java.io.BufferedReader;
 import java.io.FileInputStream;
@@ -12,9 +12,11 @@ import java.net.URISyntaxException;
 import java.text.SimpleDateFormat;
 import java.util.ArrayList;
 import java.util.Arrays;
+import java.util.Currency;
 import java.util.GregorianCalendar;
 import java.util.List;
 import java.util.Locale;
+import java.util.Set;
 import java.util.TimeZone;
 
 import org.apache.http.HttpEntity;
@@ -28,7 +30,9 @@ import org.json.JSONArray;
 import org.json.JSONException;
 import org.json.JSONObject;
 
+import android.app.Activity;
 import android.content.Context;
+import android.content.SharedPreferences.Editor;
 import android.util.Log;
 import au.com.bytecode.opencsv.CSVReader;
 
@@ -236,5 +240,50 @@ public class CurrencyConverterUtil {
         return sdf.format(calendar.getTime());
 		
 	}
+	
+	public static void SetUserPrefferences(Activity activity, String key, Object object) {
+		
+		Editor e = activity.getPreferences(Context.MODE_PRIVATE).edit();
+		if (object instanceof Boolean) {
+			e.putBoolean(key, (Boolean)object);
+		}
+		if (object instanceof Float) {
+			e.putFloat(key, (Float)object);	
+		}
+		if (object instanceof Integer) {
+			e.putInt(key, (Integer)object);	
+		}
+		if (object instanceof Long) {
+			e.putLong(key, (Long)object);	
+		}
+		if (object instanceof String) {
+			e.putString(key, (String)object);	
+		}
+		if (object instanceof Set) {
+			e.putStringSet(key, (Set<String>)object);	
+		}
+		e.commit();
+		
+	}
+	
+	public static ArrayList<CurrencyDetails> getAllCurrencies()
+    {
+        ArrayList<CurrencyDetails> toret = new ArrayList<CurrencyDetails>();
+        Locale[] locs = Locale.getAvailableLocales();
+
+        for(Locale loc : locs) {
+            try {
+            	CurrencyDetails cd = new CurrencyDetails();
+            	cd.setCode(Currency.getInstance(loc).getCurrencyCode());
+            	cd.setName(loc.getDisplayCountry());
+                toret.add(cd);
+            } catch(Exception exc)
+            {
+                // Locale not found
+            }
+        }
+
+        return toret;
+    }
 	
 }

@@ -1,9 +1,5 @@
 package com.mi6.currencyconverter.activities;
  
-import com.mi6.currencyconverter.R;
-import com.mi6.currencyconverter.R.drawable;
-import com.mi6.currencyconverter.R.layout;
-
 import android.app.TabActivity;
 import android.content.Intent;
 import android.os.Bundle;
@@ -11,16 +7,10 @@ import android.view.Menu;
 import android.view.MenuInflater;
 import android.view.MenuItem;
 import android.widget.TabHost;
+import android.widget.TabHost.TabSpec;
 import android.widget.Toast;
-import android.widget.TabHost.TabSpec;
- 
 
-
-import android.app.TabActivity;
-import android.content.Intent;
-import android.os.Bundle;
-import android.widget.TabHost;
-import android.widget.TabHost.TabSpec;
+import com.mi6.currencyconverter.R;
  
 public class CurrencyConverterTabActivity extends TabActivity {
     /** Called when the activity is first created. */
@@ -39,8 +29,8 @@ public class CurrencyConverterTabActivity extends TabActivity {
         convert.setContent(convertIntent);
          
         // Tab for Select
-        TabSpec select = tabHost.newTabSpec("Select Currencies");        
-        select.setIndicator("Select Currencies");
+        TabSpec select = tabHost.newTabSpec("Select Currency");        
+        select.setIndicator("Select Currency");
         Intent selectIntent = new Intent(this, CurrencySelectorActivity.class);
         select.setContent(selectIntent);
          
