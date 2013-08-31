@@ -42,8 +42,6 @@ import com.mi6.currencyconverter.dto.RateValues;
 
 public class CurrencyConverterUtil {
 	
-	public static final String[] CURRENCY_LIST = {"EUR","GBP","HUF","RON","USD"}; 
-	
 	public static final CurrencyDetails ReadCurrencyDetailsFromCsv(Context context, String currencyName) {
 		
 		String filename = currencyName;
@@ -219,7 +217,7 @@ public class CurrencyConverterUtil {
 		boolean cacheStatus = false;
 		Log.i("CacheRates", "Start caching rates at:" + GetFormatedCurrentTime());
 		for (String curr:currencies) {
-			CurrencyDetails currDetails = getOnlineRates(curr, Arrays.asList(CURRENCY_LIST));
+			CurrencyDetails currDetails = getOnlineRates(curr, currencies);
 			WriteCurrencyDetailsToCsv(context, currDetails);
 		}
 		Log.i("CacheRates", "End caching rates at:" + GetFormatedCurrentTime());
@@ -241,49 +239,19 @@ public class CurrencyConverterUtil {
 		
 	}
 	
-	public static void SetUserPrefferences(Activity activity, String key, Object object) {
+	public static List<CurrencyDetails> removeCurrenciesFromConvertionList(List<CurrencyDetails> currencyList, Set<String> convertList) {
 		
-		Editor e = activity.getPreferences(Context.MODE_PRIVATE).edit();
-		if (object instanceof Boolean) {
-			e.putBoolean(key, (Boolean)object);
-		}
-		if (object instanceof Float) {
-			e.putFloat(key, (Float)object);	
-		}
-		if (object instanceof Integer) {
-			e.putInt(key, (Integer)object);	
-		}
-		if (object instanceof Long) {
-			e.putLong(key, (Long)object);	
-		}
-		if (object instanceof String) {
-			e.putString(key, (String)object);	
-		}
-		if (object instanceof Set) {
-			e.putStringSet(key, (Set<String>)object);	
-		}
-		e.commit();
+		List<CurrencyDetails> updatedList = new ArrayList<CurrencyDetails>();
 		
+		for (CurrencyDetails currency:currencyList) {
+			
+			if (!convertList.contains(currency.getCode())) {
+				updatedList.add(currency);
+			}
+			
+		}
+		
+		return updatedList;
 	}
-	
-	public static ArrayList<CurrencyDetails> getAllCurrencies()
-    {
-        ArrayList<CurrencyDetails> toret = new ArrayList<CurrencyDetails>();
-        Locale[] locs = Locale.getAvailableLocales();
-
-        for(Locale loc : locs) {
-            try {
-            	CurrencyDetails cd = new CurrencyDetails();
-            	cd.setCode(Currency.getInstance(loc).getCurrencyCode());
-            	cd.setName(loc.getDisplayCountry());
-                toret.add(cd);
-            } catch(Exception exc)
-            {
-                // Locale not found
-            }
-        }
-
-        return toret;
-    }
 	
 }

@@ -45,6 +45,15 @@ public class CurrencyParser {
 	public List<CurrencyDetails> getList() {
 		return this.list;
 	}
+	public CurrencyDetails getCurencyDetails(String curencyCode) {
+		CurrencyDetails currencyDetails = null;
+		for (CurrencyDetails currency:this.list) {
+			if (currency.getCode().equals(curencyCode)) {
+				currencyDetails = currency;
+			}
+		}
+		return currencyDetails;
+	}
 
 	public String getFlag(String currency) {
 		return (String) this.map.get(currency);
