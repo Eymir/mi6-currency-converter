@@ -1,10 +1,15 @@
 package com.mi6.currencyconverter.activities;
 
 import java.io.InputStream;
+import java.util.HashSet;
 import java.util.List;
+import java.util.Set;
 
 import android.app.Activity;
+import android.content.Context;
+import android.content.SharedPreferences.Editor;
 import android.os.Bundle;
+import android.preference.PreferenceManager;
 import android.view.View;
 import android.widget.AdapterView;
 import android.widget.AdapterView.OnItemClickListener;
@@ -14,6 +19,8 @@ import android.widget.Toast;
 import com.mi6.currencyconverter.R;
 import com.mi6.currencyconverter.adapters.CurrencyArrayAdapter;
 import com.mi6.currencyconverter.dto.CurrencyDetails;
+import com.mi6.currencyconverter.utils.CurrencyConverterConstants;
+import com.mi6.currencyconverter.utils.CurrencyConverterUtil;
 import com.mi6.currencyconverter.utils.CurrencyParser;
 
 public class CurrencySelectorActivity extends Activity {
@@ -27,16 +34,22 @@ public class CurrencySelectorActivity extends Activity {
 		setContentView(R.layout.selector_listview);
 		setTitle("Select Currencies");
 
-		// Create Parser for raw/countries.xml
+		// Create Parser for raw/currencies.xml
 		CurrencyParser currencyParser = new CurrencyParser();
 		InputStream inputStream = getResources().openRawResource(R.raw.currencies);
 		
 		// Parse the inputstream
 		currencyParser.parse(inputStream);
 
-		// Get Countries
+		// Get Currencies
 		List<CurrencyDetails> currencyList = currencyParser.getList();
 		
+		Set<String> usedCurrencies = new HashSet<String>();
+    	
+    	usedCurrencies = PreferenceManager.getDefaultSharedPreferences(this).getStringSet(CurrencyConverterConstants.LISTED_CURRENCIES, null);
+    	if (usedCurrencies != null) {
+    		currencyList = CurrencyConverterUtil.removeCurrenciesFromConvertionList(currencyList,usedCurrencies);
+    	}
 		
 		// Create a customized ArrayAdapter
 		final CurrencyArrayAdapter adapter = new CurrencyArrayAdapter(
@@ -54,13 +67,26 @@ public class CurrencySelectorActivity extends Activity {
 		        int position, long id) {
 		       // When clicked, show a toast with the TextView text
 		    	CurrencyDetails currency = (CurrencyDetails) parent.getItemAtPosition(position);
+		    	
+		    	Set<String> usedCurrencies = new HashSet<String>();
+		    	
+		    	usedCurrencies = getSharedPreferences(CurrencyConverterConstants.SHARED_PREFERENCES, Context.MODE_PRIVATE).getStringSet(CurrencyConverterConstants.LISTED_CURRENCIES, null);
+		    	usedCurrencies.add(currency.getCode());
+		    	Editor e = PreferenceManager.getDefaultSharedPreferences(getParent()).edit();
+		    	e.putStringSet(CurrencyConverterConstants.LISTED_CURRENCIES, usedCurrencies);
+		    	e.commit();
 		    	adapter.remove(currency);
-		       Toast.makeText(getApplicationContext(),
-		         "Clicked on Row: " + currency.getName(), 
-		         Toast.LENGTH_LONG).show();
+		    	
 		      }
 		     });
 		
+	}
+	
+	@Override
+	protected void onResume() {
+
+	   super.onResume();
+	   this.onCreate(null);
 	}
     
 }

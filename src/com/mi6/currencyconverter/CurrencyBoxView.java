@@ -4,13 +4,15 @@ import android.content.Context;
 import android.view.LayoutInflater;
 import android.view.View;
 import android.widget.EditText;
+import android.widget.ImageView;
 import android.widget.LinearLayout;
-import android.widget.Spinner;
+import android.widget.TextView;
 
 public class CurrencyBoxView {
     private LinearLayout boxLayout;
-    private EditText currValueField;
-    private Spinner spinner;
+    private ImageView currencyFlag;
+	private EditText currValueField;
+    private TextView currencyCode;
     private View view;
 
     public CurrencyBoxView(Context context, int boxNr, LayoutInflater li) {
@@ -23,12 +25,21 @@ public class CurrencyBoxView {
 
         this.boxLayout = (LinearLayout)view.findViewById(R.id.currLayoutId);
     	this.currValueField = (EditText)view.findViewById(R.id.curr);
-    	this.spinner = (Spinner)view.findViewById(R.id.spinner); 
+    	this.currencyCode = (TextView)view.findViewById(R.id.currency_code); 
+    	this.currencyFlag = (ImageView)view.findViewById(R.id.currency_flag);
     	 
 
     }
 
-	public LinearLayout getBoxLayout() {
+    public ImageView getCurrencyFlag() {
+		return currencyFlag;
+	}
+
+	public void setCurrencyFlag(ImageView currencyFlag) {
+		this.currencyFlag = currencyFlag;
+	}
+    
+    public LinearLayout getBoxLayout() {
 		return boxLayout;
 	}
 
@@ -44,12 +55,12 @@ public class CurrencyBoxView {
 		this.currValueField = currValueField;
 	}
 
-	public Spinner getSpinner() {
-		return spinner;
+	public TextView getCurrencyCode() {
+		return currencyCode;
 	}
 
-	public void setSpinner(Spinner spinner) {
-		this.spinner = spinner;
+	public void setCurrencyCode(TextView currencyCode) {
+		this.currencyCode = currencyCode;
 	}
 
 	public View getView() {
