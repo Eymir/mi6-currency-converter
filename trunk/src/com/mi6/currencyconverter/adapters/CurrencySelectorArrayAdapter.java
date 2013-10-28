@@ -18,9 +18,9 @@ import android.widget.ArrayAdapter;
 import android.widget.ImageView;
 import android.widget.TextView;
 
-public class CurrencyArrayAdapter extends ArrayAdapter<CurrencyDetails> {
+public class CurrencySelectorArrayAdapter extends ArrayAdapter<CurrencyDetails> {
 
-	private static final String tag = "CurrencyArrayAdapter";
+	private static final String tag = "CurrencySelectorArrayAdapter";
 	private static final String ASSETS_DIR = "flags/";
 	private Context context;
 
@@ -30,7 +30,7 @@ public class CurrencyArrayAdapter extends ArrayAdapter<CurrencyDetails> {
 	private TextView countryName;
 	private List<CurrencyDetails> currencies = new ArrayList<CurrencyDetails>();
 
-	public CurrencyArrayAdapter(Context context, int textViewResourceId,
+	public CurrencySelectorArrayAdapter(Context context, int textViewResourceId,
 			List<CurrencyDetails> objects) {
 		super(context, textViewResourceId, objects);
 		this.context = context;

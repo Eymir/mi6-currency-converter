@@ -7,12 +7,12 @@ import java.io.FileOutputStream;
 import java.io.IOException;
 import java.io.InputStream;
 import java.io.InputStreamReader;
+import java.net.SocketTimeoutException;
 import java.net.URI;
 import java.net.URISyntaxException;
+import java.net.UnknownHostException;
 import java.text.SimpleDateFormat;
 import java.util.ArrayList;
-import java.util.Arrays;
-import java.util.Currency;
 import java.util.GregorianCalendar;
 import java.util.List;
 import java.util.Locale;
@@ -25,19 +25,22 @@ import org.apache.http.StatusLine;
 import org.apache.http.client.ClientProtocolException;
 import org.apache.http.client.HttpClient;
 import org.apache.http.client.methods.HttpGet;
+import org.apache.http.conn.ConnectTimeoutException;
 import org.apache.http.impl.client.DefaultHttpClient;
+import org.apache.http.params.BasicHttpParams;
+import org.apache.http.params.HttpConnectionParams;
+import org.apache.http.params.HttpParams;
 import org.json.JSONArray;
 import org.json.JSONException;
 import org.json.JSONObject;
 
-import android.app.Activity;
 import android.content.Context;
-import android.content.SharedPreferences.Editor;
 import android.util.Log;
 import au.com.bytecode.opencsv.CSVReader;
 
+import com.mi6.currencyconverter.R;
 import com.mi6.currencyconverter.dto.CurrencyDetails;
-import com.mi6.currencyconverter.dto.RateValues;
+import com.mi6.currencyconverter.dto.RateDetail;
 
 
 public class CurrencyConverterUtil {
@@ -47,7 +50,7 @@ public class CurrencyConverterUtil {
 		String filename = currencyName;
 		FileInputStream fis = null;
 		CurrencyDetails currencyDetails = new CurrencyDetails();
-		List<RateValues> rvList = new ArrayList<RateValues>();
+		List<RateDetail> rvList = new ArrayList<RateDetail>();
 		
 		try {
 			fis = context.openFileInput(filename);
@@ -67,7 +70,7 @@ public class CurrencyConverterUtil {
 		    }
 		    
 		    currencyDetails.setName(currencyName);
-		    currencyDetails.setRateValues(rvList);
+		    currencyDetails.setRateDetails(rvList);
 		    
 		    csvReader.close();
 		  } catch (IOException e) {
@@ -82,13 +85,13 @@ public class CurrencyConverterUtil {
 		FileOutputStream fos = null;
 		String detailsToWrite = "";
 		
-		List<RateValues> rv = currDetails.getRateValues();
+		List<RateDetail> rv = currDetails.getRateDetails();
 		
-		for(RateValues rates:rv) {
+		for(RateDetail rates:rv) {
 			detailsToWrite = detailsToWrite 
 							+ rates.getName() 
 							+ "," 
-							+ rates.getUnitsPerCurrency() 
+							+ rates.getRate() 
 							+ "," + rates.getCacheDate() 
 							+ System.getProperty("line.separator");
 		}
@@ -109,17 +112,18 @@ public class CurrencyConverterUtil {
 		return writeStatus;
 	}
 	
-	private static RateValues ReadValuesFromLine(String[] line) {
-		RateValues rv = new RateValues();
+	private static RateDetail ReadValuesFromLine(String[] line) {
+		RateDetail rv = new RateDetail();
 		
 		rv.setName(line[0]);
-		rv.setUnitsPerCurrency(Double.parseDouble(line[1]));
+		rv.setRate(Double.parseDouble(line[1]));
 		//rv.setCacheDate(Date.valueOf(line[1]));
 		
 		return rv;
 	}
 	
-	public static CurrencyDetails getOnlineRates(String fromCurrency, List<String> targetCurrencies) {
+	public static CurrencyDetails getOnlineRates(String fromCurrency, List<String> targetCurrencies) 
+													throws ConnectTimeoutException, UnknownHostException{
 		
 		String baseURL1 = "http://query.yahooapis.com/v1/public/yql?q=select%20id%2C%20Rate%2C%20Date%20from%20yahoo.finance.xchange%20where%20pair%20in%20(%22";
 		String baseURL2 = "%22)&format=json&diagnostics=false&env=store%3A%2F%2Fdatatables.org%2Falltableswithkeys&callback=";
@@ -127,7 +131,10 @@ public class CurrencyConverterUtil {
 		String line = null;
 		String result = null;
 		CurrencyDetails currencyDetails = new CurrencyDetails();
-		HttpClient httpClient = new DefaultHttpClient();
+		final HttpParams httpParams = new BasicHttpParams();
+	    HttpConnectionParams.setConnectionTimeout(httpParams, 3000);
+	    HttpConnectionParams.setConnectionTimeout(httpParams, 3000);
+		HttpClient httpClient = new DefaultHttpClient(httpParams);
 		//HttpHost proxy = new HttpHost("172.17.0.10", 8080);
 		//httpClient.getParams().setParameter(ConnRoutePNames.DEFAULT_PROXY, proxy);
 		HttpGet httpGet = new HttpGet();
@@ -141,8 +148,8 @@ public class CurrencyConverterUtil {
 			
 			httpGet.setURI(new URI(fullURL));
 		} catch (URISyntaxException e1) {
-			// TODO Auto-generated catch block
 			e1.printStackTrace();
+			return null;
 		}
 		HttpResponse response = null;
 		try {
@@ -161,12 +168,20 @@ public class CurrencyConverterUtil {
                     result = sBuilder.toString();
                     currencyDetails = getCurrencyDetailsFromJSON(result);
             } else {
-                    Log.e("Getter", "Failed to get response");
+                    Log.e("CurrencyConverterUtil.getOnlineRates", "Failed to get response");
             }
     } catch (ClientProtocolException e) {
             e.printStackTrace();
+            return null;
+    } catch (ConnectTimeoutException e) {
+    		Log.e("CurrencyConverterUtil.getOnlineRates", "<<<< Throw ConnectTimeoutException >>>>");
+            throw e;
+    } catch (UnknownHostException e) {
+    		Log.e("CurrencyConverterUtil.getOnlineRates", "<<<< Throw UnknownHostException >>>>");
+    		throw e;
     } catch (IOException e) {
-            e.printStackTrace();
+    		e.printStackTrace();
+    		return null;
     }
 		return currencyDetails;
 	}
@@ -181,31 +196,35 @@ public class CurrencyConverterUtil {
         		JSONObject rateObject = (JSONObject) results;
         		Log.d("JSON", "there is just one rate");
         		String fromCurrency = null;
-        		RateValues rv = new RateValues();
-        		List<RateValues> rvList = new ArrayList<RateValues>();
+        		RateDetail rv = new RateDetail();
+        		List<RateDetail> rvList = new ArrayList<RateDetail>();
                 fromCurrency = rateObject.getString("id").subSequence(0, 3).toString();
                 rv.setName(rateObject.getString("id").subSequence(3, 6).toString());
-                rv.setUnitsPerCurrency(rateObject.getDouble("Rate"));
+                rv.setRate(rateObject.getDouble("Rate"));
                 //rv.setCacheDate(Date.valueOf(rateObject.getString("Date")));
                 rvList.add(rv);
                 currencyDetails.setName(fromCurrency);
-	            currencyDetails.setRateValues(rvList);
+	            currencyDetails.setRateDetails(rvList);
         	} else {
         	JSONArray jsonData = (JSONArray) results;
             String fromCurrency = null;
-            List<RateValues> rvList = new ArrayList<RateValues>();
+            List<RateDetail> rvList = new ArrayList<RateDetail>();
 	            for (int i=0; i<jsonData.length(); i++) {
-	            	RateValues rv = new RateValues();
+	            	RateDetail rv = new RateDetail();
 	                JSONObject item = jsonData.getJSONObject(i);
 	                fromCurrency = item.getString("id").subSequence(0, 3).toString();
 	                rv.setName(item.getString("id").subSequence(3, 6).toString());
-	                rv.setUnitsPerCurrency(item.getDouble("Rate"));
+	                if (fromCurrency.equalsIgnoreCase(item.getString("id").subSequence(3, 6).toString())){
+	                	rv.setRate(Double.valueOf(1));
+	                } else {
+	                	rv.setRate(item.getDouble("Rate"));
+	                }
 	                //rv.setCacheDate(Date.valueOf(item.getString("Date")));
 	                rvList.add(rv);
 	            }
 	            
 	            currencyDetails.setName(fromCurrency);
-	            currencyDetails.setRateValues(rvList);
+	            currencyDetails.setRateDetails(rvList);
         	}
         } catch (JSONException e) {
             Log.e("JSONException", "Error: " + e.toString());
@@ -213,12 +232,16 @@ public class CurrencyConverterUtil {
 		return currencyDetails;
 	}
 	
-	public static boolean CacheRates(Context context, List <String> currencies) {
+	public static boolean CacheRates(Context context, List <String> currencies) throws ConnectTimeoutException, UnknownHostException{
 		boolean cacheStatus = false;
 		Log.i("CacheRates", "Start caching rates at:" + GetFormatedCurrentTime());
 		for (String curr:currencies) {
 			CurrencyDetails currDetails = getOnlineRates(curr, currencies);
-			WriteCurrencyDetailsToCsv(context, currDetails);
+			if (currDetails != null) {
+				WriteCurrencyDetailsToCsv(context, currDetails);
+			} else {
+				Log.d("CacheRates", "Currency details from Yahoo site is null");
+			}
 		}
 		Log.i("CacheRates", "End caching rates at:" + GetFormatedCurrentTime());
 		
@@ -252,6 +275,18 @@ public class CurrencyConverterUtil {
 		}
 		
 		return updatedList;
+	}
+	
+	public static CurrencyDetails getCurrencyByCode(List<CurrencyDetails> currencyList, String code) {
+		
+		CurrencyDetails currency = null;
+		
+		for (CurrencyDetails curr:currencyList) {
+			if (code.equalsIgnoreCase(curr.getCode())) {
+				currency = curr;
+			}
+		}
+		return currency;
 	}
 	
 }

@@ -6,4 +6,5 @@
 		<currency code="USD" name="United States Dollar" country="United States" flag="us"/>
 		<currency code="HUF" name="Hungarian Forint" country="Hungary" flag="hu"/>
 		<currency code="CHF" name="Swiss Franc" country="Switzerland" flag="ch"/>
+		<currency code="TRY" name="Turkish Lira" country="Turkey" flag="tr"/>
 </currencies>

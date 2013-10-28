@@ -19,10 +19,11 @@
 	    android:layout_width="wrap_content"
 	    android:layout_height="wrap_content"
 	    android:textSize="20dp"	
-	    android:text="Code" />
+	    android:text="Code"/>
 	<TextView
 	    android:layout_width="20dp"
-	    android:layout_height="wrap_content"/>
+	    android:layout_height="wrap_content"
+	    />
 
 	<LinearLayout
 	    android:layout_width="wrap_content"
@@ -30,19 +31,14 @@
 	    android:orientation="vertical" >
 	
 	        <EditText
-	            android:id="@+id/curr"
-	            android:onClick="TextFieldClicked"
+	            android:id="@+id/currValue"
 	            android:layout_width="150dp"
-	            android:layout_height="match_parent"
+	            android:layout_height="wrap_content"
 	            android:inputType="numberDecimal"
-	            android:lines="1" >
-	        </EditText>
+	            android:lines="1" 
+	            android:clickable="true"
+	            android:imeOptions="actionDone"
+	            android:gravity = "center_vertical"
+	            android:paddingTop="15dp"/>
 	</LinearLayout>
-	<ImageView
-		android:id="@+id/currency_remove"
-		android:layout_gravity="left"
-		android:layout_width="wrap_content"
-		android:layout_height="wrap_content"
-		android:onClick="removeFromDisplayList" 
-		android:src="@drawable/remove"/>
 </LinearLayout>
