@@ -28,6 +28,13 @@ public class CurrencyConverterTabActivity extends TabActivity {
         Intent convertIntent = new Intent(this, CurrencyConverterActivity.class);
         convert.setContent(convertIntent);
          
+     // Tab for Graph
+        TabSpec graph = tabHost.newTabSpec("Graph");
+        // setting Title and Icon for the Tab
+        graph.setIndicator("Graph");
+        Intent graphIntent = new Intent(this, CurrencyGraphActivity.class);
+        graph.setContent(graphIntent);
+        
         // Tab for Select
         TabSpec select = tabHost.newTabSpec("Select Currency");        
         select.setIndicator("Select Currency");
@@ -37,6 +44,7 @@ public class CurrencyConverterTabActivity extends TabActivity {
         // Adding all TabSpec to TabHost
         tabHost.addTab(convert); // Adding convert tab
         tabHost.addTab(select); // Adding select tab
+        tabHost.addTab(graph); // Adding graph tab
     }
 	@Override
 	public boolean onCreateOptionsMenu(Menu menu) {

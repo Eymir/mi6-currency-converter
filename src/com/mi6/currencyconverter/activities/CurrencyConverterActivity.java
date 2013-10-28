@@ -1,68 +1,76 @@
 package com.mi6.currencyconverter.activities;
 
-import java.io.IOException;
 import java.io.InputStream;
-import java.text.DecimalFormat;
+import java.net.UnknownHostException;
 import java.util.ArrayList;
 import java.util.HashSet;
 import java.util.List;
 import java.util.Set;
 
+import org.apache.http.conn.ConnectTimeoutException;
+
 import android.app.Activity;
 import android.app.AlertDialog;
+import android.app.ProgressDialog;
 import android.content.Context;
 import android.content.SharedPreferences.Editor;
-import android.graphics.Bitmap;
-import android.graphics.BitmapFactory;
 import android.graphics.Color;
 import android.graphics.Typeface;
 import android.net.ConnectivityManager;
 import android.net.NetworkInfo;
 import android.os.AsyncTask;
 import android.os.Bundle;
+import android.os.Handler;
 import android.preference.PreferenceManager;
+import android.util.Log;
 import android.view.LayoutInflater;
 import android.view.Menu;
 import android.view.MenuInflater;
 import android.view.MenuItem;
 import android.view.View;
 import android.view.View.OnClickListener;
+import android.view.animation.Animation;
+import android.view.animation.AnimationUtils;
 import android.widget.Button;
 import android.widget.EditText;
 import android.widget.FrameLayout;
 import android.widget.LinearLayout;
-import android.widget.ProgressBar;
+import android.widget.ListView;
 import android.widget.TextView;
 import android.widget.Toast;
 
-import com.mi6.currencyconverter.CurrencyBoxView;
 import com.mi6.currencyconverter.R;
+import com.mi6.currencyconverter.adapters.CurrencyConvertorArrayAdapter;
 import com.mi6.currencyconverter.dto.CurrencyDetails;
-import com.mi6.currencyconverter.dto.RateValues;
 import com.mi6.currencyconverter.utils.CurrencyConverterConstants;
 import com.mi6.currencyconverter.utils.CurrencyConverterUtil;
 import com.mi6.currencyconverter.utils.CurrencyParser;
+import com.mi6.currencyconverter.utils.SwipeDismissListViewTouchListener;
 
 public class CurrencyConverterActivity extends Activity implements OnClickListener {
 
+	private static final int defaultTextColor = Color.WHITE;
 	/** Called when the activity is first created. */
 	
-	private List<Double> liveRates;
-	
-	private List<CurrencyBoxView> boxViewList = new ArrayList<CurrencyBoxView>();
+	Activity activity = this;
 	private Button convert;
-	private int defaultTextColor;
-	ProgressBar progressBar;
+	private ProgressDialog progressDialog ;
 	private AlertDialog alertDialog;
 	private Button alertButton;
-	private int numberOfCurrencies = 0;
+	// Create a customized ArrayAdapter
+	CurrencyConvertorArrayAdapter adapter = null;
+	List<CurrencyDetails> displayedList = new ArrayList<CurrencyDetails>();
+	CurrencyDetails mainCurrency = null;
+				
+	// Get reference to ListView holder
+	ListView lv = null;
 	
 	@Override
 	protected void onStart() {
 
 	   super.onStart();
 	   if (isNetworkAvailable()) {
-       	new CacheRates().execute();
+       	new CacheRates(this).execute();
        }
 	}
 	
@@ -70,58 +78,28 @@ public class CurrencyConverterActivity extends Activity implements OnClickListen
     public void onCreate(Bundle savedInstanceState) {
         super.onCreate(savedInstanceState);
         
-        setContentView(R.layout.currency_converter_layout);
+        setContentView(R.layout.convertor_listview);
         addMainLayout();
+        addProgressDialog();
         addAlertDialog();
     }
 	
 	@Override
 	protected void onResume() {
-
+		addMainLayout();
+		addProgressDialog();
 	   super.onResume();
-	   updateMainLayout();
-	  // this.onCreate(null);
 	}
 	
-	private void updateMainLayout(){
-		Set<String> userCurrencies = new HashSet<String>();
-		Set<String> displayedCurrencies = new HashSet<String>();
-		LinearLayout boxLayout=(LinearLayout)findViewById(R.id.boxLinearlayoutId);
-		CurrencyParser currencyParser = new CurrencyParser();
-		InputStream inputStream = getResources().openRawResource(R.raw.currencies);
+	private void addProgressDialog() {
 		
-		// Parse the inputstream
-		currencyParser.parse(inputStream);
-		
-    	userCurrencies = PreferenceManager.getDefaultSharedPreferences(this).getStringSet(CurrencyConverterConstants.LISTED_CURRENCIES, null);
-    	if (userCurrencies != null) {
-				for (CurrencyBoxView boxView:boxViewList) {
-					displayedCurrencies.add(boxView.getCurrencyCode().getText().toString());
-				}
-				for (String curr:userCurrencies) {
-					if (!displayedCurrencies.contains(curr)) {
-						CurrencyBoxView currencyBox = new CurrencyBoxView(this.getApplicationContext(),displayedCurrencies.size(), getLayoutInflater());
-						boxLayout.addView(currencyBox.getView());
-						currencyBox.getCurrencyCode().setText(curr);
-						
-						String imgFilePath = CurrencyConverterConstants.ASSETS_DIR + currencyParser.getCurencyDetails(curr).getFlag();
-						try {
-							Bitmap bitmap = BitmapFactory.decodeStream(this.getResources().getAssets()
-									.open(imgFilePath));
-							currencyBox.getCurrencyFlag().setImageBitmap(bitmap);
-						} catch (IOException e) {
-							// TODO Auto-generated catch block
-							e.printStackTrace();
-						}
-						
-						boxViewList.add(currencyBox);
-						numberOfCurrencies++;
-					}
-				}
-    	}
+		progressDialog = new ProgressDialog (this) ;
+        progressDialog.setCancelable (false) ;
+        progressDialog.setMessage ("Retrieving online rates...") ;
+        progressDialog.setTitle ("Please wait") ;
+        progressDialog.setIndeterminate (true) ;
 		
 	}
-	
 	private void addAlertDialog() {
 		//alert dialog layout
         AlertDialog.Builder builder = new AlertDialog.Builder(CurrencyConverterActivity.this)
@@ -155,8 +133,6 @@ public class CurrencyConverterActivity extends Activity implements OnClickListen
 		// Get Currencies
 		List<CurrencyDetails> currencyList = currencyParser.getList();
 		
-		LinearLayout boxLayout=(LinearLayout)findViewById(R.id.boxLinearlayoutId);
-
 		Set<String> usedCurrencies = new HashSet<String>();
 		Set<String> defaultUsedCurrencies = new HashSet<String>();
 		defaultUsedCurrencies.add("USD");
@@ -166,58 +142,75 @@ public class CurrencyConverterActivity extends Activity implements OnClickListen
     	
     	if (usedCurrencies == null || usedCurrencies.size() == 0) {
     		Editor e = PreferenceManager.getDefaultSharedPreferences(this).edit();
+    		e.clear();
 	    	e.putStringSet(CurrencyConverterConstants.LISTED_CURRENCIES, defaultUsedCurrencies);
 	    	e.commit();
 	    	usedCurrencies = defaultUsedCurrencies;
     	}
-    		numberOfCurrencies = usedCurrencies.size();
 			for (CurrencyDetails currency:currencyList) {
-			int i = 0;
-				if (usedCurrencies.contains(currency.getCode())) {
-					CurrencyBoxView currencyBox = new CurrencyBoxView(this.getApplicationContext(),i, getLayoutInflater());
-					boxLayout.addView(currencyBox.getView());
-					currencyBox.getCurrencyCode().setText(currency.getCode());
-		
-					String imgFilePath = CurrencyConverterConstants.ASSETS_DIR + currency.getFlag();
-					try {
-						Bitmap bitmap = BitmapFactory.decodeStream(this.getResources().getAssets()
-								.open(imgFilePath));
-						currencyBox.getCurrencyFlag().setImageBitmap(bitmap);
-					} catch (IOException e) {
-						// TODO Auto-generated catch block
-						e.printStackTrace();
-					}
-					
-					boxViewList.add(currencyBox);
+				if ((usedCurrencies.contains(currency.getCode())) && (CurrencyConverterUtil.getCurrencyByCode(displayedList, currency.getCode())) == null) {
+					displayedList.add(currency);
 				}
-				i++;
 			}
-        
-        progressBar = (ProgressBar)findViewById(R.id.progressBar);
+			adapter = new CurrencyConvertorArrayAdapter(
+					getApplicationContext(), R.layout.convertor_listitem, displayedList);
+			// Set the ListView adapter
+			lv = (ListView) this.findViewById(R.id.convertorLV);
+			lv.setAdapter(adapter);
+			lv.setChoiceMode(ListView.CHOICE_MODE_SINGLE);
+			lv.setSelector(android.R.color.holo_blue_light);
+			// Create a ListView-specific touch listener. ListViews are given special treatment because
+	        // by default they handle touches for their list items... i.e. they're in charge of drawing
+	        // the pressed state (the list selector), handling list item clicks, etc.
+			SwipeDismissListViewTouchListener touchListener =
+	                new SwipeDismissListViewTouchListener(
+	                        lv,
+	                        new SwipeDismissListViewTouchListener.DismissCallbacks() {
+	                            @Override
+	                            public boolean canDismiss(int position) {
+	                                return true;
+	                            }
+
+	                            @Override
+	                            public void onDismiss(ListView listView, int[] reverseSortedPositions) {
+	                                for (int position : reverseSortedPositions) {
+	                                	Set<String> usedCurr = PreferenceManager.getDefaultSharedPreferences(listView.getContext()).getStringSet(CurrencyConverterConstants.LISTED_CURRENCIES, null);
+		                                usedCurr.remove((adapter.getItem(position)).getCode());
+		                                Editor e = PreferenceManager.getDefaultSharedPreferences(listView.getContext()).edit();
+		                                e.clear();
+		                    	    	e.putStringSet(CurrencyConverterConstants.LISTED_CURRENCIES, usedCurr);
+		                    	    	e.commit();
+	                                    adapter.remove(adapter.getItem(position));
+	                                }
+	                                adapter.notifyDataSetChanged();
+	                            }
+	                        });
+			lv.setOnTouchListener(touchListener);
+	        // Setting this scroll listener is required to ensure that during ListView scrolling,
+	        // we don't look for swipes.
+	        lv.setOnScrollListener(touchListener.makeScrollListener());
         
         convert = (Button)this.findViewById(R.id.convert);        
         convert.setOnClickListener(this);
         
-        defaultTextColor = ((CurrencyBoxView)boxViewList.get(0)).getCurrValueField().getTextColors().getDefaultColor();
 	}
 	   
 	public void convertAction(View view) {
-			String mainCurrency;
 			if (!hasMainFieldData()) {
 				// Showing Alert Message
 				alertDialog.setMessage((String)this.getString(R.string.alertDialog_messages_add_value_in_field));
 		        alertDialog.show();
 			} else {
-				changeTextColorForMainField();
+				//changeTextColorForMainField();
 				mainCurrency = getMainCurrency();
-				convert(mainCurrency);
+				convert(mainCurrency.getCode());
 				}
 	}
 
-	protected void convert(String mainCurrency) {
+	protected void convert(String mainCurr) {
 		
 		if (isNetworkAvailable()) {
-			new GetLiveRatesTask().execute();
+			new GetLiveRatesTask(this).execute();
 			
 		} else {
 			
@@ -226,84 +219,53 @@ public class CurrencyConverterActivity extends Activity implements OnClickListen
         			Toast.LENGTH_LONG).show();
 				        
 			Double valueToConvert;
-			CurrencyDetails currencyDetails;
-			currencyDetails = getCurencyDetails(mainCurrency);
-			valueToConvert = getMainFieldData();
+			mainCurrency.setRateDetails(getCurencyDetailsFromCSV(mainCurrency.getCode()).getRateDetails());
+			valueToConvert = mainCurrency.getValue();
+	    		for (CurrencyDetails cd:displayedList) {
+	    			Double convertedValue = mainCurrency.getSpecificRate(cd.getCode())*valueToConvert;
+	    			cd.setValue(convertedValue);
+	    			if (convertedValue == 0) {
+	    				Toast.makeText(this, 
+	    						R.string.alertDialog_messages_no_cached_value,
+	    	        			Toast.LENGTH_LONG).show();
+	    			}
+	    		}
 			
-			for (int i = 0; i < numberOfCurrencies; i++) {
-				((CurrencyBoxView)boxViewList.get(i)).getCurrValueField().setText(convertSingleValue(currencyDetails, (String)((CurrencyBoxView)boxViewList.get(i)).getCurrencyCode().getText(), valueToConvert));
-			}
 		}
+		adapter.notifyDataSetChanged();
 	}
 
-	private String getMainCurrency(){
+	private CurrencyDetails getMainCurrency(){
 		
-		String currency = null;
+		CurrencyDetails mainCurr = null;
 		View currentSelectedItem = getWindow().getCurrentFocus();
 		
-		for (int i = 0; i < numberOfCurrencies; i++) {
-			
-			if (((CurrencyBoxView)boxViewList.get(i)).getCurrValueField().equals(currentSelectedItem)) {
-				currency = (String)((CurrencyBoxView)boxViewList.get(i)).getCurrencyCode().getText().toString();
-			}
-			
-		}
-
-		
-		return currency;
+		int position = lv.getPositionForView(currentSelectedItem);
+		mainCurr = adapter.getItem(position);
+		mainCurr.setValue(Double.parseDouble(((EditText)currentSelectedItem).getText().toString()));
+		return mainCurr;
 	} 
-	
-	private String convertSingleValue(CurrencyDetails currencyDetails, String toCurr, Double value) {
-				
-		DecimalFormat f = new DecimalFormat("#.##");
-		Double currencyRate = getCurrencyRate(currencyDetails, toCurr);
-		return f.format(value*currencyRate);
-	}
-	
-	private String convertOnlineSingleValue(Double rate, Double value) {
-		DecimalFormat f = new DecimalFormat("#.##");
-		return f.format(value*rate);
-	}
 	
 	private boolean hasMainFieldData() {
 		
 		View currentView = getWindow().getCurrentFocus();
-		if ((currentView != null) && (!"".equalsIgnoreCase(((EditText) currentView).getText().toString()))) {
-			return true;
+		if (!(currentView instanceof ListView)){
+			if ((currentView != null) && (((EditText)currentView).getText()).length()>0) {
+				return true;
+			} else {
+				return false;
+			}
 		} else {
 			return false;
 		}
-		
 	}
 	
-	private Double getMainFieldData() {
-		Double value;
-		View currentView = getWindow().getCurrentFocus();
-		if ((currentView != null) && (!"".equalsIgnoreCase(((EditText) currentView).getText().toString()))) {
-			value = Double.parseDouble(((EditText) currentView).getText().toString());
-		} else {
-			value = Double.valueOf(0);
-		}
-		return value;		
-	}
-	
-	private CurrencyDetails getCurencyDetails(String currency) {
+	public CurrencyDetails getCurencyDetailsFromCSV(String currency) {
 		
 		CurrencyDetails currencyDetails;
 		currencyDetails = CurrencyConverterUtil.ReadCurrencyDetailsFromCsv(this.getApplicationContext(), currency);
 		
 		return currencyDetails;
-	}
-	
-	private Double getCurrencyRate(CurrencyDetails currencyDetails, String toCurr) {
-		Double currencyRate = Double.valueOf(0);
-		
-		for (RateValues rv : currencyDetails.getRateValues()) {
-	  		if (rv.getName().equals(toCurr)){
-	  			currencyRate = rv.getUnitsPerCurrency();
-	  		}
-		}
-	return currencyRate;
 	}
 	
 	@Override
@@ -332,32 +294,40 @@ public class CurrencyConverterActivity extends Activity implements OnClickListen
 	
 	private class GetLiveRatesTask extends AsyncTask<Void, Void, Void>{
 	    	  
+		Context context;
+		
+		public GetLiveRatesTask(Context context) {
+	        this.context = context;
+	    }
+		
 		@Override
 	    protected void onPreExecute(){
-	        progressBar.setVisibility(View.VISIBLE);
+	        progressDialog.show();
 	    }
 		
 	    @Override
 	    public Void doInBackground(Void... params) {
 			
-	    	liveRates = new ArrayList<Double>();
 	    	CurrencyDetails cd = new CurrencyDetails();
-	    	String mainCurrency = getMainCurrency();
 	    	List<String> targetCurrencies = new ArrayList<String>();
 	    	
-	    	for (int i = 0; i < numberOfCurrencies; i++) {
+	    	for (CurrencyDetails currency:displayedList) {
 	    		
-	    		targetCurrencies.add((String)((CurrencyBoxView)boxViewList.get(i)).getCurrencyCode().getText());
+	    		targetCurrencies.add(currency.getCode());
 	    		
 	    	}
 	    	
-	    	cd = CurrencyConverterUtil.getOnlineRates(mainCurrency,targetCurrencies);
+	    	try {
+				cd = CurrencyConverterUtil.getOnlineRates(mainCurrency.getCode(),targetCurrencies);
+			} catch (ConnectTimeoutException e) {
+				Log.e("CurrencyConverterActivity", "ConnectTimeoutException !!!!!!!!!");
+				e.printStackTrace();
+			} catch (UnknownHostException e) {
+				Log.e("CurrencyConverterActivity", "UnknownHostException !!!!!!!!!");
+				e.printStackTrace();
+			}
 	    	
-	    	for (int i = 0; i < numberOfCurrencies; i++) {
-	    		
-	    		liveRates.add(cd.getRateValues().get(i).getUnitsPerCurrency());
-	    		
-	    	}
+	    	mainCurrency.setRateDetails(cd.getRateDetails());
 			return null;
 	     
 	    }
@@ -365,31 +335,79 @@ public class CurrencyConverterActivity extends Activity implements OnClickListen
 	    @Override
 	    protected void onPostExecute(Void result) {
 	    	Double valueToConvert;
-			valueToConvert = getMainFieldData();
-	    	if (hasMainFieldData()) {
-	    		for (int i = 0; i < numberOfCurrencies; i++) {
-	    			
-	    			((CurrencyBoxView)boxViewList.get(i)).getCurrValueField().setText(convertOnlineSingleValue(liveRates.get(i), valueToConvert));
+			valueToConvert = mainCurrency.getValue();
+	    		for (CurrencyDetails cd:displayedList) {
+	    			if (mainCurrency.getRateDetails() != null) {
+	    				cd.setValue(mainCurrency.getSpecificRate(cd.getCode())*valueToConvert);
+	    			} else {
+	    				activity.runOnUiThread(new Runnable() {
+	    				    public void run() {
+	    				    	Toast.makeText(activity, 
+	    								R.string.alertDialog_messages_no_internet_connection,
+	    			        			Toast.LENGTH_LONG).show();
+	    							        
+	    						Double valueToConvert;
+	    						mainCurrency.setRateDetails(getCurencyDetailsFromCSV(mainCurrency.getCode()).getRateDetails());
+	    						valueToConvert = mainCurrency.getValue();
+	    				    		for (CurrencyDetails cd:displayedList) {
+	    				    			Double convertedValue = mainCurrency.getSpecificRate(cd.getCode())*valueToConvert;
+	    				    			cd.setValue(convertedValue);
+	    				    			if (convertedValue == 0) {
+	    				    				Toast.makeText(activity, 
+	    				    						R.string.alertDialog_messages_no_cached_value,
+	    				    	        			Toast.LENGTH_LONG).show();
+	    				    			}
+	    				    		}
+	    						
+	    				    }
+	    				});
+	    			}
 	    			
 	    		}
-			}
-	    	progressBar.setVisibility(View.GONE);
+	    	adapter.notifyDataSetChanged();
+	    	if(progressDialog != null && progressDialog.isShowing()){
+	            progressDialog.dismiss() ;
+	        }
 			super.onPostExecute(result);   
 	    }
 	}
 	
 	private class CacheRates extends AsyncTask<Void, Void, Void>{
 		
+		Context context;
+		
+		public CacheRates(Context context) {
+	        this.context = context;
+	    }
+		
 	    @Override
 	    public Void doInBackground(Void... params) {
 			
 			Set<String> usedCurrencies = new HashSet<String>();
-			Set<String> defaultUsedCurrencies = new HashSet<String>();
-			defaultUsedCurrencies.add("USD");
-			defaultUsedCurrencies.add("EUR");
 	    	
-	    	usedCurrencies = getPreferences(Context.MODE_PRIVATE).getStringSet(CurrencyConverterConstants.LISTED_CURRENCIES, defaultUsedCurrencies);
-	    	CurrencyConverterUtil.CacheRates(getApplicationContext(), new ArrayList<String>(usedCurrencies));
+	    	usedCurrencies = PreferenceManager.getDefaultSharedPreferences(getParent()).getStringSet(CurrencyConverterConstants.LISTED_CURRENCIES, null);
+	    	try {
+				CurrencyConverterUtil.CacheRates(getApplicationContext(), new ArrayList<String>(usedCurrencies));
+			} catch (ConnectTimeoutException e) {
+				Log.e("CurrencyConverterActivity", "ConnectionTimeoutException !!!!!!!!!");
+				activity.runOnUiThread(new Runnable() {
+				    public void run() {
+				        Toast.makeText(activity, R.string.alertDialog_messages_connect_timeout, Toast.LENGTH_SHORT).show();
+				        Toast.makeText(activity, R.string.alertDialog_messages_not_caching_rates, Toast.LENGTH_SHORT).show();
+				    }
+				});
+				e.printStackTrace();
+			} catch (UnknownHostException e) {
+				Log.e("CurrencyConverterActivity", "UnknownHostException !!!!!!!!!");
+				activity.runOnUiThread(new Runnable() {
+				    public void run() {
+				        Toast.makeText(activity, R.string.alertDialog_messages_unknown_host, Toast.LENGTH_SHORT).show();
+				        Toast.makeText(activity, R.string.alertDialog_messages_not_caching_rates, Toast.LENGTH_SHORT).show();
+				    }
+				});
+				e.printStackTrace();
+			}
+	    	
 			return null;
 	     
 	    }
@@ -409,11 +427,6 @@ public class CurrencyConverterActivity extends Activity implements OnClickListen
 	    return activeNetworkInfo != null && activeNetworkInfo.isConnected();
 	}
 	
-	public void TextFieldClicked(View view){      
-		EditText editText = (EditText)view;
-		editText.setText("");
-	}
-	
 	public void changeTextColorForMainField() {
 		
 		EditText currentSelectedItem = (EditText)getWindow().getCurrentFocus();
@@ -425,13 +438,18 @@ public class CurrencyConverterActivity extends Activity implements OnClickListen
 	
 	private void setTextColorToDefault() {
 		
-		for (int i = 0; i < numberOfCurrencies; i++) {
-			
-			((CurrencyBoxView)boxViewList.get(i)).getCurrValueField().setTextColor(defaultTextColor);
-			((CurrencyBoxView)boxViewList.get(i)).getCurrValueField().setTypeface(null,Typeface.NORMAL);
-			
-		}
-		
+		for( int i = 0; i < lv.getChildCount(); i++ )
+			for (int j = 0; j < ((LinearLayout)lv.getChildAt(i)).getChildCount(); j++) {
+				LinearLayout ll = (LinearLayout)lv.getChildAt(i);
+				if (ll.getChildAt(j) instanceof LinearLayout){
+				for (int k = 0; k < ((LinearLayout)ll.getChildAt(j)).getChildCount(); k++) {
+			  if( lv.getChildAt(k) instanceof EditText) {
+				  ((EditText)lv.getChildAt(k)).setTextColor(defaultTextColor);
+				  ((EditText)lv.getChildAt(k)).setTypeface(null,Typeface.NORMAL);
+			  }
+				}
+				}
+			}
 	}
 	
 	public void removeFromDisplayList(View view) {
@@ -442,11 +460,29 @@ public class CurrencyConverterActivity extends Activity implements OnClickListen
 		usedCurrencies = PreferenceManager.getDefaultSharedPreferences(this).getStringSet(CurrencyConverterConstants.LISTED_CURRENCIES, null);
     	usedCurrencies.remove(currencyCode.getText());
     	Editor e = PreferenceManager.getDefaultSharedPreferences(this).edit();
+    	e.clear();
 	    e.putStringSet(CurrencyConverterConstants.LISTED_CURRENCIES, usedCurrencies);
 	    e.commit();
-		parentLayout.removeAllViews();
-		numberOfCurrencies--;
+		
 	}
 	
+	  protected void removeListItem(View rowView, final int positon) {
+
+		  final Animation animation = AnimationUtils.loadAnimation(CurrencyConverterActivity.this,android.R.anim.slide_out_right);
+	    //final Animation animation = AnimationUtils.loadAnimation(rowView.getContext(), R.anim.splashfadeout);
+	      rowView.startAnimation(animation);
+	      Handler handle = new Handler();
+	      handle.postDelayed(new Runnable() {
+
+			@Override
+	          public void run() {
+	              // TODO Auto-generated method stub
+	        	  displayedList.remove(positon);
+	              adapter.notifyDataSetChanged();
+	              animation.cancel();
+	          }
+	      },1000);
+
+	  }
 	
 }

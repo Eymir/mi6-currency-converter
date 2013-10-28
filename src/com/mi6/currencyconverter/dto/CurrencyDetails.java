@@ -8,8 +8,9 @@ public class CurrencyDetails {
 	private String name;
 	private String country;
 	private String flag;
+	private double value;
 	
-	private List<RateValues> rateValues;
+	private List<RateDetail> rateDetails;
 	
 	public CurrencyDetails() {
 	}
@@ -22,17 +23,39 @@ public class CurrencyDetails {
 		this.flag = flagFilePath;
 	}
 	
+	public Double getSpecificRate(String currencyCode){
+		Double specificRate = null;
+		for (RateDetail rateDetail:rateDetails) {
+			if ((currencyCode != null) && (currencyCode.equalsIgnoreCase(rateDetail.getName()))){
+				specificRate = rateDetail.getRate();
+			}
+		}
+		if (specificRate == null) {
+			return Double.valueOf(0);
+		} else {
+			return specificRate;
+		}
+	}
+	
+	public double getValue() {
+		return value;
+	}
+
+	public void setValue(double value) {
+		this.value = value;
+	}
+	
 	public String getName() {
 		return name;
 	}
 	public void setName(String name) {
 		this.name = name;
 	}
-	public List<RateValues> getRateValues() {
-		return rateValues;
+	public List<RateDetail> getRateDetails() {
+		return rateDetails;
 	}
-	public void setRateValues(List<RateValues> rateValues) {
-		this.rateValues = rateValues;
+	public void setRateDetails(List<RateDetail> rateDetails) {
+		this.rateDetails = rateDetails;
 	}
 	public String getCode() {
 		return code;

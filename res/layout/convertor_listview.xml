@@ -1,27 +1,23 @@
 <?xml version="1.0" encoding="utf-8"?>
-
-<ScrollView xmlns:android="http://schemas.android.com/apk/res/android"
-    android:id="@+id/mainScrollLayoutId"
-  	android:layout_width="match_parent"
-    android:layout_height="match_parent">
         
-	<LinearLayout 
+	<LinearLayout xmlns:android="http://schemas.android.com/apk/res/android"
 	    android:id="@+id/mainLinearlayoutId"
 	    android:layout_width="match_parent"
 	    android:layout_height="wrap_content"
 	    android:orientation="vertical">
-	<LinearLayout
-	    android:id="@+id/boxLinearlayoutId"
-	    android:layout_width="match_parent"
-	    android:layout_height="wrap_content"
-	    android:animateLayoutChanges="true"
-	    android:clipChildren="true"
-	    android:clipToPadding="true"
-	    android:fitsSystemWindows="false"
-	    android:orientation="vertical"
-	    android:gravity="center"
-	    android:weightSum="1">
-		</LinearLayout>	
+	<ListView
+		android:id="@+id/convertorLV"
+		android:layout_width="fill_parent"
+		android:layout_height="fill_parent"
+		android:clickable="true"
+        android:choiceMode="singleChoice" 
+        android:listSelector="@drawable/listview_selector"
+        android:layout_weight="1"
+        android:cacheColorHint="@android:color/transparent"
+        android:fadingEdge="horizontal"
+        android:persistentDrawingCache="scrolling"
+        android:smoothScrollbar="false" >
+	</ListView>
 	    <LinearLayout
 	        android:layout_width="match_parent"
 	        android:layout_height="50dp"
@@ -37,4 +33,4 @@
 			    android:text="Convert" />
 		</LinearLayout>
 	</LinearLayout>	
-</ScrollView>
+

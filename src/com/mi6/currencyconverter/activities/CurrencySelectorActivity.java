@@ -6,7 +6,6 @@ import java.util.List;
 import java.util.Set;
 
 import android.app.Activity;
-import android.content.Context;
 import android.content.SharedPreferences.Editor;
 import android.os.Bundle;
 import android.preference.PreferenceManager;
@@ -14,10 +13,9 @@ import android.view.View;
 import android.widget.AdapterView;
 import android.widget.AdapterView.OnItemClickListener;
 import android.widget.ListView;
-import android.widget.Toast;
 
 import com.mi6.currencyconverter.R;
-import com.mi6.currencyconverter.adapters.CurrencyArrayAdapter;
+import com.mi6.currencyconverter.adapters.CurrencySelectorArrayAdapter;
 import com.mi6.currencyconverter.dto.CurrencyDetails;
 import com.mi6.currencyconverter.utils.CurrencyConverterConstants;
 import com.mi6.currencyconverter.utils.CurrencyConverterUtil;
@@ -52,11 +50,11 @@ public class CurrencySelectorActivity extends Activity {
     	}
 		
 		// Create a customized ArrayAdapter
-		final CurrencyArrayAdapter adapter = new CurrencyArrayAdapter(
+		final CurrencySelectorArrayAdapter adapter = new CurrencySelectorArrayAdapter(
 				getApplicationContext(), R.layout.selector_listitem, currencyList);
 		
 		// Get reference to ListView holder
-		ListView lv = (ListView) this.findViewById(R.id.countryLV);
+		ListView lv = (ListView) this.findViewById(R.id.selectorLV);
 		
 		// Set the ListView adapter
 		lv.setAdapter(adapter);
@@ -70,9 +68,10 @@ public class CurrencySelectorActivity extends Activity {
 		    	
 		    	Set<String> usedCurrencies = new HashSet<String>();
 		    	
-		    	usedCurrencies = getSharedPreferences(CurrencyConverterConstants.SHARED_PREFERENCES, Context.MODE_PRIVATE).getStringSet(CurrencyConverterConstants.LISTED_CURRENCIES, null);
+		    	usedCurrencies = PreferenceManager.getDefaultSharedPreferences(getParent()).getStringSet(CurrencyConverterConstants.LISTED_CURRENCIES, null);
 		    	usedCurrencies.add(currency.getCode());
 		    	Editor e = PreferenceManager.getDefaultSharedPreferences(getParent()).edit();
+		    	e.clear();
 		    	e.putStringSet(CurrencyConverterConstants.LISTED_CURRENCIES, usedCurrencies);
 		    	e.commit();
 		    	adapter.remove(currency);
