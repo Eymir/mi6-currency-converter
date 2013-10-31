@@ -12,6 +12,7 @@ import android.widget.Toast;
 
 import com.mi6.currencyconverter.R;
  
+@SuppressWarnings("deprecation")
 public class CurrencyConverterTabActivity extends TabActivity {
     /** Called when the activity is first created. */
     @Override

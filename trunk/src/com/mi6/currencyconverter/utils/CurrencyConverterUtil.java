@@ -11,6 +11,7 @@ import java.net.SocketTimeoutException;
 import java.net.URI;
 import java.net.URISyntaxException;
 import java.net.UnknownHostException;
+import java.sql.Date;
 import java.text.SimpleDateFormat;
 import java.util.ArrayList;
 import java.util.GregorianCalendar;
@@ -20,12 +21,14 @@ import java.util.Set;
 import java.util.TimeZone;
 
 import org.apache.http.HttpEntity;
+import org.apache.http.HttpHost;
 import org.apache.http.HttpResponse;
 import org.apache.http.StatusLine;
 import org.apache.http.client.ClientProtocolException;
 import org.apache.http.client.HttpClient;
 import org.apache.http.client.methods.HttpGet;
 import org.apache.http.conn.ConnectTimeoutException;
+import org.apache.http.conn.params.ConnRoutePNames;
 import org.apache.http.impl.client.DefaultHttpClient;
 import org.apache.http.params.BasicHttpParams;
 import org.apache.http.params.HttpConnectionParams;
@@ -35,11 +38,14 @@ import org.json.JSONException;
 import org.json.JSONObject;
 
 import android.content.Context;
+import android.net.ConnectivityManager;
+import android.net.NetworkInfo;
 import android.util.Log;
 import au.com.bytecode.opencsv.CSVReader;
 
 import com.mi6.currencyconverter.R;
 import com.mi6.currencyconverter.dto.CurrencyDetails;
+import com.mi6.currencyconverter.dto.CurrencyHistoricalData;
 import com.mi6.currencyconverter.dto.RateDetail;
 
 
@@ -122,6 +128,65 @@ public class CurrencyConverterUtil {
 		return rv;
 	}
 	
+	public static List<CurrencyHistoricalData> GetHistoricalData(String fromCurrency, String toCurrency, Date fromDate, Date toDate) 
+			throws ConnectTimeoutException, UnknownHostException {
+		
+		List<CurrencyHistoricalData> historyData = new ArrayList<CurrencyHistoricalData>();
+		String line = null;
+		
+		String url = "http://currencies.apps.grandtrunk.net/getrange/";
+		final HttpParams httpParams = new BasicHttpParams();
+	    HttpConnectionParams.setConnectionTimeout(httpParams, 3000);
+	    HttpConnectionParams.setConnectionTimeout(httpParams, 3000);
+		HttpClient httpClient = new DefaultHttpClient(httpParams);
+		//HttpHost proxy = new HttpHost("172.17.0.10", 8080);
+		//httpClient.getParams().setParameter(ConnRoutePNames.DEFAULT_PROXY, proxy);
+		HttpGet httpGet = new HttpGet();
+		try {
+			url = url + fromDate + "/" + toDate + "/" + fromCurrency + "/" + toCurrency;
+			Log.i("CurrencyConverterUtil.GetHistoricalData#url: ", url);
+		httpGet.setURI(new URI(url));
+	} catch (URISyntaxException e1) {
+		e1.printStackTrace();
+		return null;
+	}
+		HttpResponse response = null;
+		try {
+            response = httpClient.execute(httpGet);
+            StatusLine statusLine = response.getStatusLine();
+            int statusCode = statusLine.getStatusCode();
+            if (statusCode == 200) {
+                    HttpEntity entity = response.getEntity();
+                    InputStream content = entity.getContent();
+                    BufferedReader reader = new BufferedReader(new InputStreamReader(content));
+                    
+                    while ((line = reader.readLine()) != null) {
+                    	CurrencyHistoricalData currHistData = new CurrencyHistoricalData();
+                    	currHistData.setDate(Date.valueOf(line.split("\\s+")[0]));
+                    	currHistData.setRate(Double.valueOf(line.split("\\s+")[1]));
+                    	historyData.add(currHistData); 
+                    }
+                    reader.close();
+            } else {
+                    Log.e("CurrencyConverterUtil.GetHistoricalData", "Failed to get response");
+                    return null;
+            }
+    } catch (ClientProtocolException e) {
+            e.printStackTrace();
+            return null;
+    } catch (ConnectTimeoutException e) {
+    		Log.e("CurrencyConverterUtil.GetHistoricalData", "<<<< Throw ConnectTimeoutException >>>>");
+            throw e;
+    } catch (UnknownHostException e) {
+    		Log.e("CurrencyConverterUtil.GetHistoricalData", "<<<< Throw UnknownHostException >>>>");
+    		throw e;
+    } catch (IOException e) {
+    		e.printStackTrace();
+    		return null;
+    }
+		return historyData;
+	}
+	
 	public static CurrencyDetails getOnlineRates(String fromCurrency, List<String> targetCurrencies) 
 													throws ConnectTimeoutException, UnknownHostException{
 		
@@ -189,7 +254,7 @@ public class CurrencyConverterUtil {
 	private static CurrencyDetails getCurrencyDetailsFromJSON(String sJSON){
 		
 		//parse JSON data
-		CurrencyDetails currencyDetails = new CurrencyDetails();
+		CurrencyDetails currencyDetails = null;
         try{
         	Object results = new JSONObject(sJSON).getJSONObject("query").getJSONObject("results").get("rate");
         	if (results instanceof JSONObject) {
@@ -203,6 +268,7 @@ public class CurrencyConverterUtil {
                 rv.setRate(rateObject.getDouble("Rate"));
                 //rv.setCacheDate(Date.valueOf(rateObject.getString("Date")));
                 rvList.add(rv);
+                currencyDetails = new CurrencyDetails();
                 currencyDetails.setName(fromCurrency);
 	            currencyDetails.setRateDetails(rvList);
         	} else {
@@ -222,7 +288,7 @@ public class CurrencyConverterUtil {
 	                //rv.setCacheDate(Date.valueOf(item.getString("Date")));
 	                rvList.add(rv);
 	            }
-	            
+	            currencyDetails = new CurrencyDetails();
 	            currencyDetails.setName(fromCurrency);
 	            currencyDetails.setRateDetails(rvList);
         	}
@@ -237,10 +303,10 @@ public class CurrencyConverterUtil {
 		Log.i("CacheRates", "Start caching rates at:" + GetFormatedCurrentTime());
 		for (String curr:currencies) {
 			CurrencyDetails currDetails = getOnlineRates(curr, currencies);
-			if (currDetails != null) {
+			if ((currDetails != null) && (currDetails.getRateDetails() != null)) {
 				WriteCurrencyDetailsToCsv(context, currDetails);
 			} else {
-				Log.d("CacheRates", "Currency details from Yahoo site is null");
+				Log.d("CacheRates", "Currency details from Yahoo site is null ");
 			}
 		}
 		Log.i("CacheRates", "End caching rates at:" + GetFormatedCurrentTime());
@@ -287,6 +353,13 @@ public class CurrencyConverterUtil {
 			}
 		}
 		return currency;
+	}
+	
+	public static boolean IsNetworkAvailable(Context context) {
+	    ConnectivityManager connectivityManager 
+	          = (ConnectivityManager) context.getSystemService(Context.CONNECTIVITY_SERVICE);
+	    NetworkInfo activeNetworkInfo = connectivityManager.getActiveNetworkInfo();
+	    return activeNetworkInfo != null && activeNetworkInfo.isConnected();
 	}
 	
 }
