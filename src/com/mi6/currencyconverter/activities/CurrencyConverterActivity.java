@@ -16,9 +16,8 @@ import android.content.Context;
 import android.content.SharedPreferences.Editor;
 import android.graphics.Color;
 import android.graphics.Typeface;
-import android.net.ConnectivityManager;
-import android.net.NetworkInfo;
 import android.os.AsyncTask;
+import android.os.Build;
 import android.os.Bundle;
 import android.os.Handler;
 import android.preference.PreferenceManager;
@@ -64,24 +63,22 @@ public class CurrencyConverterActivity extends Activity implements OnClickListen
 				
 	// Get reference to ListView holder
 	ListView lv = null;
-	
-	@Override
-	protected void onStart() {
 
-	   super.onStart();
-	   if (isNetworkAvailable()) {
-       	new CacheRates(this).execute();
-       }
-	}
 	
 	@Override
     public void onCreate(Bundle savedInstanceState) {
         super.onCreate(savedInstanceState);
-        
         setContentView(R.layout.convertor_listview);
         addMainLayout();
         addProgressDialog();
         addAlertDialog();
+        if (CurrencyConverterUtil.IsNetworkAvailable(getApplicationContext())) {
+			if( Build.VERSION.SDK_INT >= Build.VERSION_CODES.HONEYCOMB ) {
+			    new CacheRates(this).executeOnExecutor(AsyncTask.THREAD_POOL_EXECUTOR);
+			} else {
+			    new CacheRates(this).execute();
+			}
+	    }
     }
 	
 	@Override
@@ -209,9 +206,12 @@ public class CurrencyConverterActivity extends Activity implements OnClickListen
 
 	protected void convert(String mainCurr) {
 		
-		if (isNetworkAvailable()) {
-			new GetLiveRatesTask(this).execute();
-			
+		if (CurrencyConverterUtil.IsNetworkAvailable(getApplicationContext())) {
+			if( Build.VERSION.SDK_INT >= Build.VERSION_CODES.HONEYCOMB ) {
+				new GetLiveRatesTask(this).executeOnExecutor(AsyncTask.THREAD_POOL_EXECUTOR);
+			} else {
+				new GetLiveRatesTask(this).execute();
+			}
 		} else {
 			
 			Toast.makeText(this, 
@@ -418,13 +418,6 @@ public class CurrencyConverterActivity extends Activity implements OnClickListen
 	public void onClick(View v) {
 		convertAction(v);
 		
-	}
-	
-	public boolean isNetworkAvailable() {
-	    ConnectivityManager connectivityManager 
-	          = (ConnectivityManager) getSystemService(Context.CONNECTIVITY_SERVICE);
-	    NetworkInfo activeNetworkInfo = connectivityManager.getActiveNetworkInfo();
-	    return activeNetworkInfo != null && activeNetworkInfo.isConnected();
 	}
 	
 	public void changeTextColorForMainField() {

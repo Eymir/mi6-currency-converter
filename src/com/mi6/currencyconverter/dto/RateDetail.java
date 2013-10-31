@@ -1,13 +1,22 @@
 package com.mi6.currencyconverter.dto;
 
 import java.sql.Date;
+import java.util.List;
 
 public class RateDetail {
 
 	private String name;
 	private Double rate;
+	private List <CurrencyHistoricalData> historicalData;
 	private Date cacheDate;
 	
+	
+	public List<CurrencyHistoricalData> getHistoricalData() {
+		return historicalData;
+	}
+	public void setHistoricalData(List<CurrencyHistoricalData> historicalData) {
+		this.historicalData = historicalData;
+	}
 	public Date getCacheDate() {
 		return cacheDate;
 	}
