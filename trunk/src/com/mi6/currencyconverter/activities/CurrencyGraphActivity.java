@@ -31,14 +31,14 @@ import com.jjoe64.graphview.GraphView.GraphViewData;
 import com.jjoe64.graphview.GraphViewSeries;
 import com.jjoe64.graphview.LineGraphView;
 import com.mi6.currencyconverter.R;
-import com.mi6.currencyconverter.dto.CurrencyHistoricalData;
+import com.mi6.currencyconverter.dto.CurrencyHistoricalDataDto;
 import com.mi6.currencyconverter.utils.CurrencyConverterConstants;
 import com.mi6.currencyconverter.utils.CurrencyConverterUtil;
 
 public class CurrencyGraphActivity extends Activity {
 	
 	protected Activity activity = this;
-	protected List<CurrencyHistoricalData> historicalData = null;
+	protected List<CurrencyHistoricalDataDto> historicalData = null;
 	private Spinner fromSpinner, toSpinner;
 	private Button btnSubmit;
 	GraphViewSeries exampleSeries;

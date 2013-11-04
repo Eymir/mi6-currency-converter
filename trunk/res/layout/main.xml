@@ -7,6 +7,7 @@
     <LinearLayout
         android:orientation="vertical"
         android:layout_width="fill_parent"
+        android:background="@drawable/rounded_corner_bckground"
         android:layout_height="fill_parent">
         <TabWidget
             android:id="@android:id/tabs"

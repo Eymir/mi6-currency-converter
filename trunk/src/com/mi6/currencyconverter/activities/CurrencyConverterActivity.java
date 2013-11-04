@@ -2,10 +2,13 @@ package com.mi6.currencyconverter.activities;
 
 import java.io.InputStream;
 import java.net.UnknownHostException;
+import java.sql.Date;
 import java.util.ArrayList;
+import java.util.Calendar;
 import java.util.HashSet;
 import java.util.List;
 import java.util.Set;
+import java.util.TimeZone;
 
 import org.apache.http.conn.ConnectTimeoutException;
 
@@ -25,7 +28,6 @@ import android.util.Log;
 import android.view.LayoutInflater;
 import android.view.Menu;
 import android.view.MenuInflater;
-import android.view.MenuItem;
 import android.view.View;
 import android.view.View.OnClickListener;
 import android.view.animation.Animation;
@@ -40,7 +42,9 @@ import android.widget.Toast;
 
 import com.mi6.currencyconverter.R;
 import com.mi6.currencyconverter.adapters.CurrencyConvertorArrayAdapter;
-import com.mi6.currencyconverter.dto.CurrencyDetails;
+import com.mi6.currencyconverter.sqlite.helper.DatabaseHelper;
+import com.mi6.currencyconverter.sqlite.model.CurrencyDetails;
+import com.mi6.currencyconverter.sqlite.model.RateDetails;
 import com.mi6.currencyconverter.utils.CurrencyConverterConstants;
 import com.mi6.currencyconverter.utils.CurrencyConverterUtil;
 import com.mi6.currencyconverter.utils.CurrencyParser;
@@ -60,6 +64,8 @@ public class CurrencyConverterActivity extends Activity implements OnClickListen
 	CurrencyConvertorArrayAdapter adapter = null;
 	List<CurrencyDetails> displayedList = new ArrayList<CurrencyDetails>();
 	CurrencyDetails mainCurrency = null;
+	// Database Helper
+    DatabaseHelper db;
 				
 	// Get reference to ListView holder
 	ListView lv = null;
@@ -217,12 +223,15 @@ public class CurrencyConverterActivity extends Activity implements OnClickListen
 			Toast.makeText(this, 
 					R.string.alertDialog_messages_no_internet_connection,
         			Toast.LENGTH_LONG).show();
-				        
+			TimeZone.setDefault(TimeZone.getTimeZone("GMT"));
+	    	Calendar cal = Calendar.getInstance(TimeZone.getTimeZone("GMT"));
+	    	Date today = new Date(cal.getTimeInMillis());       
 			Double valueToConvert;
-			mainCurrency.setRateDetails(getCurencyDetailsFromCSV(mainCurrency.getCode()).getRateDetails());
+			db = new DatabaseHelper(getApplicationContext());
+			mainCurrency.setRateDetails(db.getAllRatesForSpecificDay(mainCurrency.getCode(), today));
 			valueToConvert = mainCurrency.getValue();
 	    		for (CurrencyDetails cd:displayedList) {
-	    			Double convertedValue = mainCurrency.getSpecificRate(cd.getCode())*valueToConvert;
+	    			Double convertedValue = mainCurrency.getSpecificRate(cd.getCode(), today)*valueToConvert;
 	    			cd.setValue(convertedValue);
 	    			if (convertedValue == 0) {
 	    				Toast.makeText(this, 
@@ -230,7 +239,7 @@ public class CurrencyConverterActivity extends Activity implements OnClickListen
 	    	        			Toast.LENGTH_LONG).show();
 	    			}
 	    		}
-			
+			db.closeDB();
 		}
 		adapter.notifyDataSetChanged();
 	}
@@ -260,36 +269,11 @@ public class CurrencyConverterActivity extends Activity implements OnClickListen
 		}
 	}
 	
-	public CurrencyDetails getCurencyDetailsFromCSV(String currency) {
-		
-		CurrencyDetails currencyDetails;
-		currencyDetails = CurrencyConverterUtil.ReadCurrencyDetailsFromCsv(this.getApplicationContext(), currency);
-		
-		return currencyDetails;
-	}
-	
 	@Override
 	public boolean onCreateOptionsMenu(Menu menu) {
 		MenuInflater inflater = getMenuInflater();
 	    inflater.inflate(R.layout.menu, menu);
 	    return true;
-	}
-	
-	@Override
-	public boolean onOptionsItemSelected(MenuItem item) {
-	    // Handle item selection
-	    switch (item.getItemId()) {
-	        case R.id.menu_cache_policy:
-	        	Toast.makeText(this, 
-	        			"Cache Policy selected",
-	        			Toast.LENGTH_LONG).show();
-	            return true;
-	        case R.id.menu_exit:
-	            finish();
-	            return true;
-	        default:
-	            return super.onOptionsItemSelected(item);
-	    }
 	}
 	
 	private class GetLiveRatesTask extends AsyncTask<Void, Void, Void>{
@@ -308,7 +292,7 @@ public class CurrencyConverterActivity extends Activity implements OnClickListen
 	    @Override
 	    public Void doInBackground(Void... params) {
 			
-	    	CurrencyDetails cd = new CurrencyDetails();
+	    	List<RateDetails> rd = new ArrayList<RateDetails>();
 	    	List<String> targetCurrencies = new ArrayList<String>();
 	    	
 	    	for (CurrencyDetails currency:displayedList) {
@@ -318,7 +302,7 @@ public class CurrencyConverterActivity extends Activity implements OnClickListen
 	    	}
 	    	
 	    	try {
-				cd = CurrencyConverterUtil.getOnlineRates(mainCurrency.getCode(),targetCurrencies);
+				rd = CurrencyConverterUtil.getOnlineRates(mainCurrency.getCode(),targetCurrencies);
 			} catch (ConnectTimeoutException e) {
 				Log.e("CurrencyConverterActivity", "ConnectTimeoutException !!!!!!!!!");
 				e.printStackTrace();
@@ -327,7 +311,7 @@ public class CurrencyConverterActivity extends Activity implements OnClickListen
 				e.printStackTrace();
 			}
 	    	
-	    	mainCurrency.setRateDetails(cd.getRateDetails());
+	    	mainCurrency.setRateDetails(rd);
 			return null;
 	     
 	    }
@@ -335,10 +319,13 @@ public class CurrencyConverterActivity extends Activity implements OnClickListen
 	    @Override
 	    protected void onPostExecute(Void result) {
 	    	Double valueToConvert;
+	    	TimeZone.setDefault(TimeZone.getTimeZone("GMT"));
+	    	Calendar cal = Calendar.getInstance(TimeZone.getTimeZone("GMT"));
+	    	Date today = new Date(cal.getTimeInMillis()); 
 			valueToConvert = mainCurrency.getValue();
 	    		for (CurrencyDetails cd:displayedList) {
 	    			if (mainCurrency.getRateDetails() != null) {
-	    				cd.setValue(mainCurrency.getSpecificRate(cd.getCode())*valueToConvert);
+	    				cd.setValue(mainCurrency.getSpecificRate(cd.getCode(), today)*valueToConvert);
 	    			} else {
 	    				activity.runOnUiThread(new Runnable() {
 	    				    public void run() {
@@ -347,10 +334,11 @@ public class CurrencyConverterActivity extends Activity implements OnClickListen
 	    			        			Toast.LENGTH_LONG).show();
 	    							        
 	    						Double valueToConvert;
-	    						mainCurrency.setRateDetails(getCurencyDetailsFromCSV(mainCurrency.getCode()).getRateDetails());
+	    						db = new DatabaseHelper(getApplicationContext());
+	    						mainCurrency.setRateDetails(db.getAllRatesForSpecificDay(mainCurrency.getCode(), new Date(Calendar.getInstance().getTimeInMillis())));
 	    						valueToConvert = mainCurrency.getValue();
 	    				    		for (CurrencyDetails cd:displayedList) {
-	    				    			Double convertedValue = mainCurrency.getSpecificRate(cd.getCode())*valueToConvert;
+	    				    			Double convertedValue = mainCurrency.getSpecificRate(cd.getCode(), new Date(Calendar.getInstance().getTimeInMillis()))*valueToConvert;
 	    				    			cd.setValue(convertedValue);
 	    				    			if (convertedValue == 0) {
 	    				    				Toast.makeText(activity, 
@@ -358,7 +346,7 @@ public class CurrencyConverterActivity extends Activity implements OnClickListen
 	    				    	        			Toast.LENGTH_LONG).show();
 	    				    			}
 	    				    		}
-	    						
+	    				    		db.closeDB();
 	    				    }
 	    				});
 	    			}

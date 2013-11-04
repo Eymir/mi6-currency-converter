@@ -7,4 +7,12 @@
 		<currency code="HUF" name="Hungarian Forint" country="Hungary" flag="hu"/>
 		<currency code="CHF" name="Swiss Franc" country="Switzerland" flag="ch"/>
 		<currency code="TRY" name="Turkish Lira" country="Turkey" flag="tr"/>
+		<currency code="BGN" name="Bulgarian Lev" country="Bulgaria" flag="bg"/>
+		<currency code="HRK" name="Croatian Kuna" country="Croatia" flag="hr"/>
+		<currency code="DKK" name="Danish Krone" country="Denmark" flag="dk"/>
+		<currency code="LVL" name="Latvian Lats" country="Latvia" flag="lv"/>
+		<currency code="LTL" name="Lithuania Litas" country="Lithuania" flag="lt"/>
+		<currency code="PLN" name="Polish Zloty" country="Poland" flag="pl"/>
+		<currency code="SEK" name="Swedish Krona" country="Sweden" flag="se"/>
+		<currency code="CZK" name="Czech Koruna" country="Czech Republic" flag="cz"/>
 </currencies>

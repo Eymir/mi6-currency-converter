@@ -5,18 +5,20 @@ import java.io.InputStream;
 import java.util.ArrayList;
 import java.util.HashMap;
 import java.util.List;
+
 import javax.xml.parsers.DocumentBuilder;
 import javax.xml.parsers.DocumentBuilderFactory;
 import javax.xml.parsers.ParserConfigurationException;
+
 import org.w3c.dom.Document;
 import org.w3c.dom.NamedNodeMap;
 import org.w3c.dom.Node;
 import org.w3c.dom.NodeList;
 import org.xml.sax.SAXException;
 
-import com.mi6.currencyconverter.dto.CurrencyDetails;
-
 import android.util.Log;
+
+import com.mi6.currencyconverter.sqlite.model.CurrencyDetails;
 
 public class CurrencyParser {
 
@@ -45,14 +47,28 @@ public class CurrencyParser {
 	public List<CurrencyDetails> getList() {
 		return this.list;
 	}
+	
+	public List<CurrencyDetails> getListForSQLite() {
+		List<CurrencyDetails> cdList = new ArrayList<CurrencyDetails>();
+		for(CurrencyDetails cdDto:this.list) {
+			CurrencyDetails cd = new CurrencyDetails();
+			cd.setCode(cdDto.getCode());
+			cd.setCountry(cdDto.getCountry());
+			cd.setFlag(cdDto.getFlag());
+			cd.setName(cdDto.getName());
+			cdList.add(cd);
+		}
+		return cdList;
+	}
+	
 	public CurrencyDetails getCurencyDetails(String curencyCode) {
-		CurrencyDetails currencyDetails = null;
+		CurrencyDetails currencyDetailsDto = null;
 		for (CurrencyDetails currency:this.list) {
 			if (currency.getCode().equals(curencyCode)) {
-				currencyDetails = currency;
+				currencyDetailsDto = currency;
 			}
 		}
-		return currencyDetails;
+		return currencyDetailsDto;
 	}
 
 	public String getFlag(String currency) {

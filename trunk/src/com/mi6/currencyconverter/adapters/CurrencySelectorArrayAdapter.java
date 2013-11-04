@@ -5,7 +5,7 @@ import java.util.ArrayList;
 import java.util.List;
 
 import com.mi6.currencyconverter.R;
-import com.mi6.currencyconverter.dto.CurrencyDetails;
+import com.mi6.currencyconverter.sqlite.model.CurrencyDetails;
 
 import android.content.Context;
 import android.graphics.Bitmap;

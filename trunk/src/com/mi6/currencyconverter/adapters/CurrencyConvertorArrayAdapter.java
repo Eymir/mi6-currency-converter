@@ -20,7 +20,7 @@ import android.widget.ImageView;
 import android.widget.TextView;
 
 import com.mi6.currencyconverter.R;
-import com.mi6.currencyconverter.dto.CurrencyDetails;
+import com.mi6.currencyconverter.sqlite.model.CurrencyDetails;
 import com.mi6.currencyconverter.utils.CurrencyConverterConstants;
 
 public class CurrencyConvertorArrayAdapter extends ArrayAdapter<CurrencyDetails> {
@@ -60,7 +60,6 @@ public class CurrencyConvertorArrayAdapter extends ArrayAdapter<CurrencyDetails>
 		ViewHolder holder = null;
 		// Get item
 			CurrencyDetails currency = getItem(position);
-			final CurrencyDetails cd = currency;
 		if (row == null) {
 			// ROW INFLATION
 			Log.d(tag, "Starting XML Row Inflation ... ");

@@ -1,19 +1,17 @@
 package com.mi6.currencyconverter.utils;
 
 import java.io.BufferedReader;
-import java.io.FileInputStream;
-import java.io.FileNotFoundException;
-import java.io.FileOutputStream;
 import java.io.IOException;
 import java.io.InputStream;
 import java.io.InputStreamReader;
-import java.net.SocketTimeoutException;
 import java.net.URI;
 import java.net.URISyntaxException;
 import java.net.UnknownHostException;
 import java.sql.Date;
+import java.text.ParseException;
 import java.text.SimpleDateFormat;
 import java.util.ArrayList;
+import java.util.Calendar;
 import java.util.GregorianCalendar;
 import java.util.List;
 import java.util.Locale;
@@ -21,14 +19,12 @@ import java.util.Set;
 import java.util.TimeZone;
 
 import org.apache.http.HttpEntity;
-import org.apache.http.HttpHost;
 import org.apache.http.HttpResponse;
 import org.apache.http.StatusLine;
 import org.apache.http.client.ClientProtocolException;
 import org.apache.http.client.HttpClient;
 import org.apache.http.client.methods.HttpGet;
 import org.apache.http.conn.ConnectTimeoutException;
-import org.apache.http.conn.params.ConnRoutePNames;
 import org.apache.http.impl.client.DefaultHttpClient;
 import org.apache.http.params.BasicHttpParams;
 import org.apache.http.params.HttpConnectionParams;
@@ -41,97 +37,20 @@ import android.content.Context;
 import android.net.ConnectivityManager;
 import android.net.NetworkInfo;
 import android.util.Log;
-import au.com.bytecode.opencsv.CSVReader;
 
-import com.mi6.currencyconverter.R;
-import com.mi6.currencyconverter.dto.CurrencyDetails;
-import com.mi6.currencyconverter.dto.CurrencyHistoricalData;
-import com.mi6.currencyconverter.dto.RateDetail;
+import com.mi6.currencyconverter.dto.CurrencyHistoricalDataDto;
+import com.mi6.currencyconverter.sqlite.helper.DatabaseHelper;
+import com.mi6.currencyconverter.sqlite.model.CurrencyDetails;
+import com.mi6.currencyconverter.sqlite.model.RateDetails;
 
 
 public class CurrencyConverterUtil {
 	
-	public static final CurrencyDetails ReadCurrencyDetailsFromCsv(Context context, String currencyName) {
-		
-		String filename = currencyName;
-		FileInputStream fis = null;
-		CurrencyDetails currencyDetails = new CurrencyDetails();
-		List<RateDetail> rvList = new ArrayList<RateDetail>();
-		
-		try {
-			fis = context.openFileInput(filename);
-		} catch (FileNotFoundException e1) {
-			e1.printStackTrace();
-		}
-		
-
-		  try {
-		    InputStreamReader csvStreamReader = new InputStreamReader(fis);
-		    CSVReader csvReader = new CSVReader(csvStreamReader);
-		    currencyDetails.setName(currencyName);
-		    String[] line;
-
-		    while ((line = csvReader.readNext()) != null) {
-		    	rvList.add(ReadValuesFromLine(line));
-		    }
-		    
-		    currencyDetails.setName(currencyName);
-		    currencyDetails.setRateDetails(rvList);
-		    
-		    csvReader.close();
-		  } catch (IOException e) {
-		    e.printStackTrace();
-		  }
-		  return currencyDetails;
-		}
 	
-	public static final boolean WriteCurrencyDetailsToCsv(Context context, CurrencyDetails currDetails) {
-		boolean writeStatus = false;
-		String filename = currDetails.getName();
-		FileOutputStream fos = null;
-		String detailsToWrite = "";
-		
-		List<RateDetail> rv = currDetails.getRateDetails();
-		
-		for(RateDetail rates:rv) {
-			detailsToWrite = detailsToWrite 
-							+ rates.getName() 
-							+ "," 
-							+ rates.getRate() 
-							+ "," + rates.getCacheDate() 
-							+ System.getProperty("line.separator");
-		}
-		
-		try {
-			fos = context.openFileOutput(filename, Context.MODE_PRIVATE);
-			fos.write(detailsToWrite.getBytes());
-			fos.close();
-			writeStatus = true;
-		} catch (FileNotFoundException e) {
-			e.printStackTrace();
-			writeStatus = false;
-		} catch (IOException e) {
-			e.printStackTrace();
-			writeStatus = false;
-		}
-		
-		return writeStatus;
-	}
-	
-	private static RateDetail ReadValuesFromLine(String[] line) {
-		RateDetail rv = new RateDetail();
-		
-		rv.setName(line[0]);
-		rv.setRate(Double.parseDouble(line[1]));
-		//rv.setCacheDate(Date.valueOf(line[1]));
-		
-		return rv;
-	}
-	
-	public static List<CurrencyHistoricalData> GetHistoricalData(String fromCurrency, String toCurrency, Date fromDate, Date toDate) 
+	public static List<CurrencyHistoricalDataDto> GetHistoricalData(String fromCurrency, String toCurrency, Date fromDate, Date toDate) 
 			throws ConnectTimeoutException, UnknownHostException {
 		
-		List<CurrencyHistoricalData> historyData = new ArrayList<CurrencyHistoricalData>();
+		List<CurrencyHistoricalDataDto> historyData = new ArrayList<CurrencyHistoricalDataDto>();
 		String line = null;
 		
 		String url = "http://currencies.apps.grandtrunk.net/getrange/";
@@ -161,7 +80,7 @@ public class CurrencyConverterUtil {
                     BufferedReader reader = new BufferedReader(new InputStreamReader(content));
                     
                     while ((line = reader.readLine()) != null) {
-                    	CurrencyHistoricalData currHistData = new CurrencyHistoricalData();
+                    	CurrencyHistoricalDataDto currHistData = new CurrencyHistoricalDataDto();
                     	currHistData.setDate(Date.valueOf(line.split("\\s+")[0]));
                     	currHistData.setRate(Double.valueOf(line.split("\\s+")[1]));
                     	historyData.add(currHistData); 
@@ -187,7 +106,7 @@ public class CurrencyConverterUtil {
 		return historyData;
 	}
 	
-	public static CurrencyDetails getOnlineRates(String fromCurrency, List<String> targetCurrencies) 
+	public static List<RateDetails> getOnlineRates(String fromCurrency, List<String> targetCurrencies) 
 													throws ConnectTimeoutException, UnknownHostException{
 		
 		String baseURL1 = "http://query.yahooapis.com/v1/public/yql?q=select%20id%2C%20Rate%2C%20Date%20from%20yahoo.finance.xchange%20where%20pair%20in%20(%22";
@@ -195,10 +114,9 @@ public class CurrencyConverterUtil {
 		String fullURL = null;
 		String line = null;
 		String result = null;
-		CurrencyDetails currencyDetails = new CurrencyDetails();
+		List<RateDetails> rdList = new ArrayList<RateDetails>();
 		final HttpParams httpParams = new BasicHttpParams();
-	    HttpConnectionParams.setConnectionTimeout(httpParams, 3000);
-	    HttpConnectionParams.setConnectionTimeout(httpParams, 3000);
+	    HttpConnectionParams.setConnectionTimeout(httpParams, 5000);
 		HttpClient httpClient = new DefaultHttpClient(httpParams);
 		//HttpHost proxy = new HttpHost("172.17.0.10", 8080);
 		//httpClient.getParams().setParameter(ConnRoutePNames.DEFAULT_PROXY, proxy);
@@ -231,7 +149,7 @@ public class CurrencyConverterUtil {
                     }
                     reader.close();
                     result = sBuilder.toString();
-                    currencyDetails = getCurrencyDetailsFromJSON(result);
+                    rdList = getCurrencyDetailsFromJSON(result);
             } else {
                     Log.e("CurrencyConverterUtil.getOnlineRates", "Failed to get response");
             }
@@ -248,69 +166,65 @@ public class CurrencyConverterUtil {
     		e.printStackTrace();
     		return null;
     }
-		return currencyDetails;
+		return rdList;
 	}
 	
-	private static CurrencyDetails getCurrencyDetailsFromJSON(String sJSON){
+	private static List<RateDetails> getCurrencyDetailsFromJSON(String sJSON){
 		
 		//parse JSON data
-		CurrencyDetails currencyDetails = null;
+		List<RateDetails> rdList = new ArrayList<RateDetails>();
         try{
         	Object results = new JSONObject(sJSON).getJSONObject("query").getJSONObject("results").get("rate");
         	if (results instanceof JSONObject) {
         		JSONObject rateObject = (JSONObject) results;
         		Log.d("JSON", "there is just one rate");
-        		String fromCurrency = null;
-        		RateDetail rv = new RateDetail();
-        		List<RateDetail> rvList = new ArrayList<RateDetail>();
-                fromCurrency = rateObject.getString("id").subSequence(0, 3).toString();
-                rv.setName(rateObject.getString("id").subSequence(3, 6).toString());
-                rv.setRate(rateObject.getDouble("Rate"));
-                //rv.setCacheDate(Date.valueOf(rateObject.getString("Date")));
-                rvList.add(rv);
-                currencyDetails = new CurrencyDetails();
-                currencyDetails.setName(fromCurrency);
-	            currencyDetails.setRateDetails(rvList);
+        		RateDetails rd = new RateDetails();
+                rd.setSourceCurrencyCode(rateObject.getString("id").subSequence(0, 3).toString());
+                rd.setTargetCurrencyCode(rateObject.getString("id").subSequence(3, 6).toString());
+                rd.setRateValue(rateObject.getDouble("Rate"));
+                rd.setRateDate(FormatToSqlDate(rateObject.getString("Date")).toString());
+                rdList.add(rd);
         	} else {
         	JSONArray jsonData = (JSONArray) results;
             String fromCurrency = null;
-            List<RateDetail> rvList = new ArrayList<RateDetail>();
 	            for (int i=0; i<jsonData.length(); i++) {
-	            	RateDetail rv = new RateDetail();
-	                JSONObject item = jsonData.getJSONObject(i);
-	                fromCurrency = item.getString("id").subSequence(0, 3).toString();
-	                rv.setName(item.getString("id").subSequence(3, 6).toString());
-	                if (fromCurrency.equalsIgnoreCase(item.getString("id").subSequence(3, 6).toString())){
-	                	rv.setRate(Double.valueOf(1));
+	            	RateDetails rd = new RateDetails();
+	                JSONObject rateObject = jsonData.getJSONObject(i);
+	                fromCurrency = rateObject.getString("id").subSequence(0, 3).toString();
+	                rd.setSourceCurrencyCode(rateObject.getString("id").subSequence(0, 3).toString());
+	                rd.setTargetCurrencyCode(rateObject.getString("id").subSequence(3, 6).toString());
+	                if (fromCurrency.equalsIgnoreCase(rateObject.getString("id").subSequence(3, 6).toString())){
+	                	rd.setRateValue(Double.valueOf(1));
 	                } else {
-	                	rv.setRate(item.getDouble("Rate"));
+	                	rd.setRateValue(rateObject.getDouble("Rate"));
 	                }
-	                //rv.setCacheDate(Date.valueOf(item.getString("Date")));
-	                rvList.add(rv);
+	                rd.setRateValue(rateObject.getDouble("Rate"));
+	                rd.setRateDate(FormatToSqlDate(rateObject.getString("Date")).toString());
+	                rdList.add(rd);
 	            }
-	            currencyDetails = new CurrencyDetails();
-	            currencyDetails.setName(fromCurrency);
-	            currencyDetails.setRateDetails(rvList);
         	}
         } catch (JSONException e) {
             Log.e("JSONException", "Error: " + e.toString());
         } 
-		return currencyDetails;
+		return rdList;
 	}
 	
 	public static boolean CacheRates(Context context, List <String> currencies) throws ConnectTimeoutException, UnknownHostException{
 		boolean cacheStatus = false;
+		// Database Helper
+	    DatabaseHelper db= null;;
 		Log.i("CacheRates", "Start caching rates at:" + GetFormatedCurrentTime());
 		for (String curr:currencies) {
-			CurrencyDetails currDetails = getOnlineRates(curr, currencies);
-			if ((currDetails != null) && (currDetails.getRateDetails() != null)) {
-				WriteCurrencyDetailsToCsv(context, currDetails);
+			List<RateDetails> rdList = getOnlineRates(curr, currencies);
+			if ((rdList != null) && (rdList.size() > 0)) {
+				db = new DatabaseHelper(context);
+				db.addMultipleRateDetails(rdList);
 			} else {
 				Log.d("CacheRates", "Currency details from Yahoo site is null ");
 			}
 		}
 		Log.i("CacheRates", "End caching rates at:" + GetFormatedCurrentTime());
-		
+		db.closeDB();
 		return cacheStatus;
 	}
 	
@@ -362,4 +276,26 @@ public class CurrencyConverterUtil {
 	    return activeNetworkInfo != null && activeNetworkInfo.isConnected();
 	}
 	
+	public static String FormatToSqlDate(String date) {
+		
+		final String OLD_FORMAT = "MM/dd/yyyy";
+		final String NEW_FORMAT = "yyyy-MM-dd";
+
+		String newDateString;
+
+		SimpleDateFormat sdf = new SimpleDateFormat(OLD_FORMAT);
+		java.util.Date d = null;;
+		try {
+			d = sdf.parse(date);
+		} catch (ParseException e) {
+			// TODO Auto-generated catch block
+			e.printStackTrace();
+		}
+		sdf.applyPattern(NEW_FORMAT);
+		newDateString = sdf.format(d);
+		
+		return newDateString;
+	}
+	
+
 }

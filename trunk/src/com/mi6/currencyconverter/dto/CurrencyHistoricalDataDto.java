@@ -2,7 +2,7 @@ package com.mi6.currencyconverter.dto;
 
 import java.sql.Date;
 
-public class CurrencyHistoricalData {
+public class CurrencyHistoricalDataDto {
 	
 	private Date date;
 	private Double rate;

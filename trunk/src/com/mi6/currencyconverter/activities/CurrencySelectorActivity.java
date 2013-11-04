@@ -16,7 +16,7 @@ import android.widget.ListView;
 
 import com.mi6.currencyconverter.R;
 import com.mi6.currencyconverter.adapters.CurrencySelectorArrayAdapter;
-import com.mi6.currencyconverter.dto.CurrencyDetails;
+import com.mi6.currencyconverter.sqlite.model.CurrencyDetails;
 import com.mi6.currencyconverter.utils.CurrencyConverterConstants;
 import com.mi6.currencyconverter.utils.CurrencyConverterUtil;
 import com.mi6.currencyconverter.utils.CurrencyParser;
