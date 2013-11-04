@@ -372,30 +372,47 @@ public class CurrencyConverterActivity extends Activity implements OnClickListen
 	    public Void doInBackground(Void... params) {
 			
 			Set<String> usedCurrencies = new HashSet<String>();
-	    	
+			db = new DatabaseHelper(getApplicationContext());
+			boolean shouldCacheRates = false;
+			
 	    	usedCurrencies = PreferenceManager.getDefaultSharedPreferences(getParent()).getStringSet(CurrencyConverterConstants.LISTED_CURRENCIES, null);
-	    	try {
-				CurrencyConverterUtil.CacheRates(getApplicationContext(), new ArrayList<String>(usedCurrencies));
-			} catch (ConnectTimeoutException e) {
-				Log.e("CurrencyConverterActivity", "ConnectionTimeoutException !!!!!!!!!");
-				activity.runOnUiThread(new Runnable() {
-				    public void run() {
-				        Toast.makeText(activity, R.string.alertDialog_messages_connect_timeout, Toast.LENGTH_SHORT).show();
-				        Toast.makeText(activity, R.string.alertDialog_messages_not_caching_rates, Toast.LENGTH_SHORT).show();
-				    }
-				});
-				e.printStackTrace();
-			} catch (UnknownHostException e) {
-				Log.e("CurrencyConverterActivity", "UnknownHostException !!!!!!!!!");
-				activity.runOnUiThread(new Runnable() {
-				    public void run() {
-				        Toast.makeText(activity, R.string.alertDialog_messages_unknown_host, Toast.LENGTH_SHORT).show();
-				        Toast.makeText(activity, R.string.alertDialog_messages_not_caching_rates, Toast.LENGTH_SHORT).show();
-				    }
-				});
-				e.printStackTrace();
-			}
 	    	
+	    	TimeZone.setDefault(TimeZone.getTimeZone("GMT"));
+	    	Calendar cal = Calendar.getInstance(TimeZone.getTimeZone("GMT"));
+	    	Date today = new Date(cal.getTimeInMillis());
+	    	
+	    	for (String usedCurr:usedCurrencies) {
+	    		List<RateDetails> rdList = db.getAllRatesForSpecificDay(usedCurr, today);
+	    		if ((rdList != null) && (rdList.size() > 0) && (shouldCacheRates == false)) {
+	    			shouldCacheRates = false;
+	    		} else {
+	    			shouldCacheRates = true;
+	    		}
+	    	}
+	    	if (shouldCacheRates) {
+		    	try {
+					CurrencyConverterUtil.CacheRates(getApplicationContext(), new ArrayList<String>(usedCurrencies));
+				} catch (ConnectTimeoutException e) {
+					Log.e("CurrencyConverterActivity", "ConnectionTimeoutException !!!!!!!!!");
+					activity.runOnUiThread(new Runnable() {
+					    public void run() {
+					        Toast.makeText(activity, R.string.alertDialog_messages_connect_timeout, Toast.LENGTH_SHORT).show();
+					        Toast.makeText(activity, R.string.alertDialog_messages_not_caching_rates, Toast.LENGTH_SHORT).show();
+					    }
+					});
+					e.printStackTrace();
+				} catch (UnknownHostException e) {
+					Log.e("CurrencyConverterActivity", "UnknownHostException !!!!!!!!!");
+					activity.runOnUiThread(new Runnable() {
+					    public void run() {
+					        Toast.makeText(activity, R.string.alertDialog_messages_unknown_host, Toast.LENGTH_SHORT).show();
+					        Toast.makeText(activity, R.string.alertDialog_messages_not_caching_rates, Toast.LENGTH_SHORT).show();
+					    }
+					});
+					e.printStackTrace();
+				}
+	    }
+	    	db.closeDB();
 			return null;
 	     
 	    }

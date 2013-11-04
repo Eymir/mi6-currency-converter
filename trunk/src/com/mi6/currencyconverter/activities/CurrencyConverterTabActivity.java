@@ -30,9 +30,9 @@ public class CurrencyConverterTabActivity extends TabActivity {
         convert.setContent(convertIntent);
          
      // Tab for Graph
-        TabSpec graph = tabHost.newTabSpec("Graph");
+        TabSpec graph = tabHost.newTabSpec("Historical Data");
         // setting Title and Icon for the Tab
-        graph.setIndicator("Graph");
+        graph.setIndicator("Historical Data");
         Intent graphIntent = new Intent(this, CurrencyGraphActivity.class);
         graph.setContent(graphIntent);
         
