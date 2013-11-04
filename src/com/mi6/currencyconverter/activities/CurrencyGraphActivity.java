@@ -31,18 +31,21 @@ import com.jjoe64.graphview.GraphView.GraphViewData;
 import com.jjoe64.graphview.GraphViewSeries;
 import com.jjoe64.graphview.LineGraphView;
 import com.mi6.currencyconverter.R;
-import com.mi6.currencyconverter.dto.CurrencyHistoricalDataDto;
+import com.mi6.currencyconverter.sqlite.helper.DatabaseHelper;
+import com.mi6.currencyconverter.sqlite.model.RateDetails;
 import com.mi6.currencyconverter.utils.CurrencyConverterConstants;
 import com.mi6.currencyconverter.utils.CurrencyConverterUtil;
 
 public class CurrencyGraphActivity extends Activity {
 	
 	protected Activity activity = this;
-	protected List<CurrencyHistoricalDataDto> historicalData = null;
+	protected List<RateDetails> historicalData = null;
 	private Spinner fromSpinner, toSpinner;
 	private Button btnSubmit;
 	GraphViewSeries exampleSeries;
 	GraphView graphView;
+	
+	DatabaseHelper db = null;
 	
 	
 	@SuppressLint("SimpleDateFormat")
@@ -53,16 +56,6 @@ public class CurrencyGraphActivity extends Activity {
 
 		addItemsOnSpinners();
 		addListenerOnButton();
-		
-		if (CurrencyConverterUtil.IsNetworkAvailable(getApplicationContext())) {
-			if( Build.VERSION.SDK_INT >= Build.VERSION_CODES.HONEYCOMB ) {
-			    new GetHistoricalData((String)fromSpinner.getSelectedItem(), (String)toSpinner.getSelectedItem()).executeOnExecutor(AsyncTask.THREAD_POOL_EXECUTOR);
-			} else {
-			    new GetHistoricalData((String)fromSpinner.getSelectedItem(), (String)toSpinner.getSelectedItem()).execute();
-			}
-	    }
-		
-		
 		
 	}
 	
@@ -141,31 +134,37 @@ public class CurrencyGraphActivity extends Activity {
 		@Override
 	    public Void doInBackground(Void... params) {
 			
+			db = new DatabaseHelper(getApplicationContext());
 	    	Calendar fromDate = Calendar.getInstance();
 	    	fromDate.add(Calendar.DAY_OF_MONTH, -30);
 	    	Calendar toDate = Calendar.getInstance();  
-	    	
-	    	
-	    		try {
-	    			historicalData = CurrencyConverterUtil.GetHistoricalData(fromCurrency, tocurrency, new Date(fromDate.getTimeInMillis()), new Date(toDate.getTimeInMillis()));
-			} catch (ConnectTimeoutException e) {
-				Log.e("CurrencyConverterActivity", "ConnectionTimeoutException !!!!!!!!!");
-				activity.runOnUiThread(new Runnable() {
-				    public void run() {
-				        Toast.makeText(activity, R.string.alertDialog_messages_connect_timeout, Toast.LENGTH_SHORT).show();
-				    }
-				});
-				e.printStackTrace();
-			} catch (UnknownHostException e) {
-				Log.e("CurrencyConverterActivity", "UnknownHostException !!!!!!!!!");
-				activity.runOnUiThread(new Runnable() {
-				    public void run() {
-				        Toast.makeText(activity, R.string.alertDialog_messages_unknown_host, Toast.LENGTH_SHORT).show();
-				    }
-				});
-				e.printStackTrace();
-			}
-	    	
+	    	historicalData = db.getHistoricalDataForRate(fromCurrency, tocurrency);
+	    	if ((historicalData == null) || (historicalData.size() < 19)) {
+		    		try {
+		    			historicalData = null; 
+		    			historicalData = CurrencyConverterUtil.GetHistoricalData(fromCurrency, tocurrency, new Date(fromDate.getTimeInMillis()), new Date(toDate.getTimeInMillis()));
+		    			//cache rates
+		    			db.addMultipleRateDetails(historicalData);
+				} catch (ConnectTimeoutException e) {
+					Log.e("CurrencyGraphActivity", "ConnectionTimeoutException !!!!!!!!!");
+					activity.runOnUiThread(new Runnable() {
+					    public void run() {
+					        Toast.makeText(activity, R.string.alertDialog_messages_connect_timeout, Toast.LENGTH_SHORT).show();
+					    }
+					});
+					e.printStackTrace();
+				} catch (UnknownHostException e) {
+					Log.e("CurrencyGraphActivity", "UnknownHostException !!!!!!!!!");
+					activity.runOnUiThread(new Runnable() {
+					    public void run() {
+					        Toast.makeText(activity, R.string.alertDialog_messages_unknown_host, Toast.LENGTH_SHORT).show();
+					    }
+					});
+					e.printStackTrace();
+				}
+	    	} else {
+	    		Log.i("CurrencyGraphActivity", "Values already stored in DB. No call to server needed.");
+	    	}
 			return null;
 	     
 	    }
@@ -186,7 +185,7 @@ public class CurrencyGraphActivity extends Activity {
 				 */
 				GraphViewData[] data = new GraphViewData[historicalData.size()];
 				for (int i=0; i<historicalData.size(); i++) {
-					data[i] = new GraphViewData(historicalData.get(i).getDate().getTime(), historicalData.get(i).getRate()); // previous day
+					data[i] = new GraphViewData((Date.valueOf(historicalData.get(i).getRateDate()).getTime()), historicalData.get(i).getRateValue()); // previous day
 				}
 				if (exampleSeries != null) {
 					exampleSeries.resetData(data);
@@ -220,6 +219,7 @@ public class CurrencyGraphActivity extends Activity {
 				layout.addView(graphView);
 		    	
 		    }
+			db.closeDB();
 	    }
 	}
 	

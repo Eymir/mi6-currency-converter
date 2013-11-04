@@ -11,7 +11,6 @@ import java.sql.Date;
 import java.text.ParseException;
 import java.text.SimpleDateFormat;
 import java.util.ArrayList;
-import java.util.Calendar;
 import java.util.GregorianCalendar;
 import java.util.List;
 import java.util.Locale;
@@ -38,7 +37,6 @@ import android.net.ConnectivityManager;
 import android.net.NetworkInfo;
 import android.util.Log;
 
-import com.mi6.currencyconverter.dto.CurrencyHistoricalDataDto;
 import com.mi6.currencyconverter.sqlite.helper.DatabaseHelper;
 import com.mi6.currencyconverter.sqlite.model.CurrencyDetails;
 import com.mi6.currencyconverter.sqlite.model.RateDetails;
@@ -47,16 +45,15 @@ import com.mi6.currencyconverter.sqlite.model.RateDetails;
 public class CurrencyConverterUtil {
 	
 	
-	public static List<CurrencyHistoricalDataDto> GetHistoricalData(String fromCurrency, String toCurrency, Date fromDate, Date toDate) 
+	public static List<RateDetails> GetHistoricalData(String fromCurrency, String toCurrency, Date fromDate, Date toDate) 
 			throws ConnectTimeoutException, UnknownHostException {
 		
-		List<CurrencyHistoricalDataDto> historyData = new ArrayList<CurrencyHistoricalDataDto>();
+		List<RateDetails> historyData = new ArrayList<RateDetails>();
 		String line = null;
 		
 		String url = "http://currencies.apps.grandtrunk.net/getrange/";
 		final HttpParams httpParams = new BasicHttpParams();
-	    HttpConnectionParams.setConnectionTimeout(httpParams, 3000);
-	    HttpConnectionParams.setConnectionTimeout(httpParams, 3000);
+	    HttpConnectionParams.setConnectionTimeout(httpParams, 5000);
 		HttpClient httpClient = new DefaultHttpClient(httpParams);
 		//HttpHost proxy = new HttpHost("172.17.0.10", 8080);
 		//httpClient.getParams().setParameter(ConnRoutePNames.DEFAULT_PROXY, proxy);
@@ -80,9 +77,11 @@ public class CurrencyConverterUtil {
                     BufferedReader reader = new BufferedReader(new InputStreamReader(content));
                     
                     while ((line = reader.readLine()) != null) {
-                    	CurrencyHistoricalDataDto currHistData = new CurrencyHistoricalDataDto();
-                    	currHistData.setDate(Date.valueOf(line.split("\\s+")[0]));
-                    	currHistData.setRate(Double.valueOf(line.split("\\s+")[1]));
+                    	RateDetails currHistData = new RateDetails();
+                    	currHistData.setSourceCurrencyCode(fromCurrency);
+                    	currHistData.setTargetCurrencyCode(toCurrency);
+                    	currHistData.setRateDate(line.split("\\s+")[0]);
+                    	currHistData.setRateValue(Double.valueOf(line.split("\\s+")[1]));
                     	historyData.add(currHistData); 
                     }
                     reader.close();

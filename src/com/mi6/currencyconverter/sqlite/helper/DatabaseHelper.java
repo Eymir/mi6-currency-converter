@@ -304,6 +304,36 @@ public class DatabaseHelper extends SQLiteOpenHelper {
     }
     
     /*
+     * get historical data between sourceCurrency and targetCurrency
+     */
+    public List<RateDetails> getHistoricalDataForRate(String sourceCurrency, String targetCurrency) {
+        db = this.getReadableDatabase();
+        List<RateDetails> rates = new ArrayList<RateDetails>();;
+     
+        String selectQuery = "SELECT  * FROM " + TABLE_RATE_DETAILS + " WHERE "
+                + RD_SOURCE_CURRENCY_CODE + " = '" + sourceCurrency + "' AND " + RD_TARGET_CURRENCY_CODE + " = '" + targetCurrency + "'";
+     
+        Log.e(LOG, selectQuery);
+     
+        Cursor c = db.rawQuery(selectQuery, null);
+     
+     // looping through all rows and adding to list
+        if (c.moveToFirst()) {
+            do {
+            	RateDetails rd = new RateDetails();
+                rd.setSourceCurrencyCode(c.getString(c.getColumnIndex(RD_SOURCE_CURRENCY_CODE)));
+                rd.setTargetCurrencyCode(c.getString(c.getColumnIndex(RD_TARGET_CURRENCY_CODE)));
+                rd.setRateDate(c.getString(c.getColumnIndex(RD_RATE_DATE)));
+                rd.setRateValue(c.getDouble(c.getColumnIndex(RD_RATE_VALUE)));
+                // adding to currencies list
+                rates.add(rd);
+            } while (c.moveToNext());
+        }
+     
+        return rates;
+    }
+    
+    /*
      * getting all rates for a specific currency
      * */
     public List<RateDetails> getRatesForSpecificCurrency(String sourceCurrency) {
