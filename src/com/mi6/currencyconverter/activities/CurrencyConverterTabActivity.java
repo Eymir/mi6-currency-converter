@@ -57,11 +57,6 @@ public class CurrencyConverterTabActivity extends TabActivity {
 	public boolean onOptionsItemSelected(MenuItem item) {
 	    // Handle item selection
 	    switch (item.getItemId()) {
-	        case R.id.menu_cache_policy:
-	        	Toast.makeText(this, 
-	        			"Cache Policy selected",
-	        			Toast.LENGTH_LONG).show();
-	            return true;
 	        case R.id.menu_exit:
 	            finish();
 	            return true;

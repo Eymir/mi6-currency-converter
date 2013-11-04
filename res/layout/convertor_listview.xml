@@ -1,9 +1,9 @@
 <?xml version="1.0" encoding="utf-8"?>
         
-	<LinearLayout xmlns:android="http://schemas.android.com/apk/res/android"
+	<RelativeLayout xmlns:android="http://schemas.android.com/apk/res/android"
 	    android:id="@+id/mainLinearlayoutId"
 	    android:layout_width="match_parent"
-	    android:layout_height="wrap_content"
+	    android:layout_height="match_parent"
 	    android:orientation="vertical">
 	<ListView
 		android:id="@+id/convertorLV"
@@ -19,18 +19,24 @@
         android:smoothScrollbar="false" >
 	</ListView>
 	    <LinearLayout
-	        android:layout_width="match_parent"
-	        android:layout_height="50dp"
-	        android:fitsSystemWindows="false"
-	        android:gravity="bottom"
-	        android:orientation="horizontal" >
+        android:layout_width="match_parent"
+        android:layout_height="wrap_content"
+        android:layout_alignParentBottom="true"
+        android:layout_gravity="bottom"
+        android:orientation="horizontal"
+        android:background="#FF000000"
+        android:paddingLeft="20dp"
+        android:paddingRight="20dp" >
 
 			<Button
 			    android:id="@+id/convert"
-			    android:layout_width="250dp"
-			    android:layout_height="wrap_content"
+			    android:layout_width="0dp"
+    			android:layout_height="wrap_content"
+    			android:layout_gravity="center_vertical"
+    			android:layout_weight="1"
+    			android:background="@drawable/list_item_style"
 			    android:onClick="convertAction"
 			    android:text="Convert" />
 		</LinearLayout>
-	</LinearLayout>	
+	</RelativeLayout>	
 
