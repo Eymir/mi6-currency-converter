@@ -12,6 +12,7 @@ import org.apache.http.conn.ConnectTimeoutException;
 
 import android.annotation.SuppressLint;
 import android.app.Activity;
+import android.content.SharedPreferences.Editor;
 import android.os.AsyncTask;
 import android.os.Build;
 import android.os.Bundle;
@@ -79,6 +80,13 @@ public class CurrencyGraphActivity extends Activity {
 		Set<String> usedCurrencies = new HashSet<String>();
 	    usedCurrencies = PreferenceManager.getDefaultSharedPreferences(this).getStringSet(CurrencyConverterConstants.LISTED_CURRENCIES, null);
 		  
+	    	if (usedCurrencies.size() < 2) {
+		    	Toast.makeText(activity, 
+		    			R.string.alertDialog_messages_no_currencies_on_display_list,
+		    			Toast.LENGTH_LONG).show();
+		    	setDefaultCurrenciesOnDisplayList();
+		    	usedCurrencies = PreferenceManager.getDefaultSharedPreferences(this).getStringSet(CurrencyConverterConstants.LISTED_CURRENCIES, null);
+	    	}
 		fromSpinner = (Spinner) findViewById(R.id.fromSpinner);
 		ArrayAdapter<String> dataAdapterFrom = new ArrayAdapter<String>(this,
 			android.R.layout.simple_spinner_item, usedCurrencies.toArray(new String[usedCurrencies.size()]));
@@ -92,6 +100,16 @@ public class CurrencyGraphActivity extends Activity {
 		toSpinner.setAdapter(dataAdapterTo);
 		toSpinner.setSelection(1);
 	  }
+
+	private void setDefaultCurrenciesOnDisplayList() {
+		Set<String> defaultUsedCurrencies = new HashSet<String>();
+		defaultUsedCurrencies.add("USD");
+		defaultUsedCurrencies.add("EUR");
+		Editor e = PreferenceManager.getDefaultSharedPreferences(activity).edit();
+		e.clear();
+		e.putStringSet(CurrencyConverterConstants.LISTED_CURRENCIES, defaultUsedCurrencies);
+		e.commit();
+	}
 	  
 	  // get the selected dropdown list value
 	  public void addListenerOnButton() {
