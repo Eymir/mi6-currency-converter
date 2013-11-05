@@ -1,5 +1,7 @@
 package com.mi6.currencyconverter.sqlite.model;
 
+import java.text.DecimalFormat;
+
 
 public class RateDetails {
 
@@ -46,7 +48,7 @@ public class RateDetails {
 	}
 
 	public double getRateValue() {
-		return rateValue;
+		return Double.parseDouble(new DecimalFormat("#.###").format(rateValue));
 	}
 
 	public void setRateValue(double rateValue) {

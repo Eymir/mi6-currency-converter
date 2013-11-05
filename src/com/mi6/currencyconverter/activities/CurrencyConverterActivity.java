@@ -199,6 +199,7 @@ public class CurrencyConverterActivity extends Activity implements OnClickListen
 	}
 	   
 	public void convertAction(View view) {
+		if ((displayedList != null) && (displayedList.size() > 0)) {
 			if (!hasMainFieldData()) {
 				// Showing Alert Message
 				alertDialog.setMessage((String)this.getString(R.string.alertDialog_messages_add_value_in_field));
@@ -208,40 +209,54 @@ public class CurrencyConverterActivity extends Activity implements OnClickListen
 				mainCurrency = getMainCurrency();
 				convert(mainCurrency.getCode());
 				}
+		} else {
+			activity.runOnUiThread(new Runnable() {
+			    public void run() {
+			        Toast.makeText(activity, R.string.alertDialog_messages_no_currencies_on_display_list, Toast.LENGTH_SHORT).show();
+			    }
+			});
+    		Set<String> defaultUsedCurrencies = new HashSet<String>();
+    		defaultUsedCurrencies.add("USD");
+    		defaultUsedCurrencies.add("EUR");
+    		Editor e = PreferenceManager.getDefaultSharedPreferences(activity).edit();
+    		e.clear();
+	    	e.putStringSet(CurrencyConverterConstants.LISTED_CURRENCIES, defaultUsedCurrencies);
+	    	e.commit();
+	    	addMainLayout();
+		}
 	}
 
 	protected void convert(String mainCurr) {
 		
-		if (CurrencyConverterUtil.IsNetworkAvailable(getApplicationContext())) {
-			if( Build.VERSION.SDK_INT >= Build.VERSION_CODES.HONEYCOMB ) {
-				new GetLiveRatesTask(this).executeOnExecutor(AsyncTask.THREAD_POOL_EXECUTOR);
+			if (CurrencyConverterUtil.IsNetworkAvailable(getApplicationContext())) {
+				if( Build.VERSION.SDK_INT >= Build.VERSION_CODES.HONEYCOMB ) {
+					new GetLiveRatesTask(this).executeOnExecutor(AsyncTask.THREAD_POOL_EXECUTOR);
+				} else {
+					new GetLiveRatesTask(this).execute();
+				}
 			} else {
-				new GetLiveRatesTask(this).execute();
+				Toast.makeText(this, 
+						R.string.alertDialog_messages_no_internet_connection,
+	        			Toast.LENGTH_LONG).show();
+				TimeZone.setDefault(TimeZone.getTimeZone("GMT"));
+		    	Calendar cal = Calendar.getInstance(TimeZone.getTimeZone("GMT"));
+		    	Date today = new Date(cal.getTimeInMillis());       
+				Double valueToConvert;
+				db = new DatabaseHelper(getApplicationContext());
+				mainCurrency.setRateDetails(db.getAllRatesForSpecificDay(mainCurrency.getCode(), today));
+				valueToConvert = mainCurrency.getValue();
+		    		for (CurrencyDetails cd:displayedList) {
+		    			Double convertedValue = mainCurrency.getSpecificRate(cd.getCode(), today)*valueToConvert;
+		    			cd.setValue(convertedValue);
+		    			if (convertedValue == 0) {
+		    				Toast.makeText(this, 
+		    						R.string.alertDialog_messages_no_cached_value,
+		    	        			Toast.LENGTH_LONG).show();
+		    			}
+		    		}
+				db.closeDB();
+			adapter.notifyDataSetChanged();
 			}
-		} else {
-			
-			Toast.makeText(this, 
-					R.string.alertDialog_messages_no_internet_connection,
-        			Toast.LENGTH_LONG).show();
-			TimeZone.setDefault(TimeZone.getTimeZone("GMT"));
-	    	Calendar cal = Calendar.getInstance(TimeZone.getTimeZone("GMT"));
-	    	Date today = new Date(cal.getTimeInMillis());       
-			Double valueToConvert;
-			db = new DatabaseHelper(getApplicationContext());
-			mainCurrency.setRateDetails(db.getAllRatesForSpecificDay(mainCurrency.getCode(), today));
-			valueToConvert = mainCurrency.getValue();
-	    		for (CurrencyDetails cd:displayedList) {
-	    			Double convertedValue = mainCurrency.getSpecificRate(cd.getCode(), today)*valueToConvert;
-	    			cd.setValue(convertedValue);
-	    			if (convertedValue == 0) {
-	    				Toast.makeText(this, 
-	    						R.string.alertDialog_messages_no_cached_value,
-	    	        			Toast.LENGTH_LONG).show();
-	    			}
-	    		}
-			db.closeDB();
-		}
-		adapter.notifyDataSetChanged();
 	}
 
 	private CurrencyDetails getMainCurrency(){
@@ -295,6 +310,8 @@ public class CurrencyConverterActivity extends Activity implements OnClickListen
 	    	List<RateDetails> rd = new ArrayList<RateDetails>();
 	    	List<String> targetCurrencies = new ArrayList<String>();
 	    	
+	    	if ((displayedList != null) && (displayedList.size() > 0)){
+	    	
 	    	for (CurrencyDetails currency:displayedList) {
 	    		
 	    		targetCurrencies.add(currency.getCode());
@@ -312,6 +329,20 @@ public class CurrencyConverterActivity extends Activity implements OnClickListen
 			}
 	    	
 	    	mainCurrency.setRateDetails(rd);
+	    	} else {
+	    		activity.runOnUiThread(new Runnable() {
+				    public void run() {
+				        Toast.makeText(activity, R.string.alertDialog_messages_no_currencies_on_display_list, Toast.LENGTH_SHORT).show();
+				    }
+				});
+	    		Set<String> defaultUsedCurrencies = new HashSet<String>();
+	    		defaultUsedCurrencies.add("USD");
+	    		defaultUsedCurrencies.add("EUR");
+	    		Editor e = PreferenceManager.getDefaultSharedPreferences(activity).edit();
+	    		e.clear();
+		    	e.putStringSet(CurrencyConverterConstants.LISTED_CURRENCIES, defaultUsedCurrencies);
+		    	e.commit();
+	    	}
 			return null;
 	     
 	    }

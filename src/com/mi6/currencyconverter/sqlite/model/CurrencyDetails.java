@@ -1,6 +1,7 @@
 package com.mi6.currencyconverter.sqlite.model;
 
 import java.sql.Date;
+import java.text.DecimalFormat;
 import java.util.List;
 
 public class CurrencyDetails {
@@ -26,7 +27,7 @@ public class CurrencyDetails {
 	}
 	
 	public double getValue() {
-		return value;
+		return Double.parseDouble(new DecimalFormat("#.###").format(value));
 	}
 
 	public void setValue(double value) {
