@@ -14,6 +14,7 @@ import org.apache.http.conn.ConnectTimeoutException;
 
 import android.app.Activity;
 import android.app.AlertDialog;
+import android.app.ListActivity;
 import android.app.ProgressDialog;
 import android.content.Context;
 import android.content.SharedPreferences.Editor;
@@ -45,12 +46,13 @@ import com.mi6.currencyconverter.adapters.CurrencyConvertorArrayAdapter;
 import com.mi6.currencyconverter.sqlite.helper.DatabaseHelper;
 import com.mi6.currencyconverter.sqlite.model.CurrencyDetails;
 import com.mi6.currencyconverter.sqlite.model.RateDetails;
+import com.mi6.currencyconverter.ui.TouchListView;
 import com.mi6.currencyconverter.utils.CurrencyConverterConstants;
 import com.mi6.currencyconverter.utils.CurrencyConverterUtil;
 import com.mi6.currencyconverter.utils.CurrencyParser;
 import com.mi6.currencyconverter.utils.SwipeDismissListViewTouchListener;
 
-public class CurrencyConverterActivity extends Activity implements OnClickListener {
+public class CurrencyConverterActivity extends ListActivity implements OnClickListener {
 
 	private static final int defaultTextColor = Color.WHITE;
 	/** Called when the activity is first created. */
@@ -68,7 +70,7 @@ public class CurrencyConverterActivity extends Activity implements OnClickListen
     DatabaseHelper db;
 				
 	// Get reference to ListView holder
-	ListView lv = null;
+    TouchListView lv = null;
 
 	
 	@Override
@@ -158,10 +160,12 @@ public class CurrencyConverterActivity extends Activity implements OnClickListen
 			adapter = new CurrencyConvertorArrayAdapter(
 					getApplicationContext(), R.layout.convertor_listitem, displayedList);
 			// Set the ListView adapter
-			lv = (ListView) this.findViewById(R.id.convertorLV);
+			lv = (TouchListView)getListView();
 			lv.setAdapter(adapter);
 			lv.setChoiceMode(ListView.CHOICE_MODE_SINGLE);
 			lv.setSelector(android.R.color.holo_blue_light);
+			lv.setDropListener(onDrop);
+			lv.setRemoveListener(onRemove);
 			// Create a ListView-specific touch listener. ListViews are given special treatment because
 	        // by default they handle touches for their list items... i.e. they're in charge of drawing
 	        // the pressed state (the list selector), handling list item clicks, etc.
@@ -198,6 +202,23 @@ public class CurrencyConverterActivity extends Activity implements OnClickListen
         
 	}
 	   
+	private TouchListView.DropListener onDrop=new TouchListView.DropListener() {
+		@Override
+		public void drop(int from, int to) {
+				CurrencyDetails item=adapter.getItem(from);
+				
+				adapter.remove(item);
+				adapter.insert(item, to);
+		}
+	};
+	
+	private TouchListView.RemoveListener onRemove=new TouchListView.RemoveListener() {
+		@Override
+		public void remove(int which) {
+				adapter.remove(adapter.getItem(which));
+		}
+	};
+	
 	public void convertAction(View view) {
 		if ((displayedList != null) && (displayedList.size() > 0)) {
 			if (!hasMainFieldData()) {
