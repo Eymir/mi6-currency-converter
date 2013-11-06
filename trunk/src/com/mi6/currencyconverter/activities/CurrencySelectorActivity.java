@@ -52,7 +52,8 @@ public class CurrencySelectorActivity extends Activity {
 		
 		Set<String> usedCurrencies = new HashSet<String>();
     	
-    	usedCurrencies = PreferenceManager.getDefaultSharedPreferences(this).getStringSet(CurrencyConverterConstants.LISTED_CURRENCIES, null);
+    	usedCurrencies = CurrencyConverterUtil.ConvertStringToSet(
+    			PreferenceManager.getDefaultSharedPreferences(this).getString(CurrencyConverterConstants.LISTED_CURRENCIES, null));
     	if (usedCurrencies != null) {
     		currencyList = CurrencyConverterUtil.removeCurrenciesFromConvertionList(currencyList,usedCurrencies);
     	}
@@ -76,11 +77,12 @@ public class CurrencySelectorActivity extends Activity {
 		    	
 		    	Set<String> usedCurrencies = new HashSet<String>();
 		    	
-		    	usedCurrencies = PreferenceManager.getDefaultSharedPreferences(getParent()).getStringSet(CurrencyConverterConstants.LISTED_CURRENCIES, null);
+		    	usedCurrencies = CurrencyConverterUtil.ConvertStringToSet
+		    			(PreferenceManager.getDefaultSharedPreferences(getParent()).getString(CurrencyConverterConstants.LISTED_CURRENCIES, null));
 		    	usedCurrencies.add(currency.getCode());
 		    	Editor e = PreferenceManager.getDefaultSharedPreferences(getParent()).edit();
 		    	e.clear();
-		    	e.putStringSet(CurrencyConverterConstants.LISTED_CURRENCIES, usedCurrencies);
+		    	e.putString(CurrencyConverterConstants.LISTED_CURRENCIES, CurrencyConverterUtil.ConvertSetToString(usedCurrencies));
 		    	e.commit();
 		    	adapter.remove(currency);
 		    	
