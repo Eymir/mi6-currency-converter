@@ -22,13 +22,15 @@ import android.widget.TextView;
 import com.mi6.currencyconverter.R;
 import com.mi6.currencyconverter.sqlite.model.CurrencyDetails;
 import com.mi6.currencyconverter.utils.CurrencyConverterConstants;
+import com.mi6.currencyconverter.utils.CurrencyConverterUtil;
 
 public class CurrencyConvertorArrayAdapter extends ArrayAdapter<CurrencyDetails> {
 
 	private static final String tag = "CurrencyConvertorArrayAdapter";
 	private static final String ASSETS_DIR = "flags/";
 	private Context context;
-	Set<String> usedCurrencies = PreferenceManager.getDefaultSharedPreferences(this.getContext()).getStringSet(CurrencyConverterConstants.LISTED_CURRENCIES, null);
+	Set<String> usedCurrencies = CurrencyConverterUtil.ConvertStringToSet(
+			PreferenceManager.getDefaultSharedPreferences(this.getContext()).getString(CurrencyConverterConstants.LISTED_CURRENCIES, null));
 	Editor e = PreferenceManager.getDefaultSharedPreferences(this.getContext()).edit();
 	
 	private List<CurrencyDetails> currencies = new ArrayList<CurrencyDetails>();
@@ -42,6 +44,10 @@ public class CurrencyConvertorArrayAdapter extends ArrayAdapter<CurrencyDetails>
 
 	public int getCount() {
 		return this.currencies.size();
+	}
+	
+	public List<CurrencyDetails> getList() {
+		return this.currencies;
 	}
 
 	public CurrencyDetails getItem(int index) {

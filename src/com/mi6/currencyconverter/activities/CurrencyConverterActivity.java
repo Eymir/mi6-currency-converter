@@ -5,7 +5,7 @@ import java.net.UnknownHostException;
 import java.sql.Date;
 import java.util.ArrayList;
 import java.util.Calendar;
-import java.util.HashSet;
+import java.util.LinkedHashSet;
 import java.util.List;
 import java.util.Set;
 import java.util.TimeZone;
@@ -138,17 +138,18 @@ public class CurrencyConverterActivity extends ListActivity implements OnClickLi
 		// Get Currencies
 		List<CurrencyDetails> currencyList = currencyParser.getList();
 		
-		Set<String> usedCurrencies = new HashSet<String>();
-		Set<String> defaultUsedCurrencies = new HashSet<String>();
+		Set<String> usedCurrencies = new LinkedHashSet<String>();
+		Set<String> defaultUsedCurrencies = new LinkedHashSet<String>();
 		defaultUsedCurrencies.add("USD");
 		defaultUsedCurrencies.add("EUR");
     	
-    	usedCurrencies = PreferenceManager.getDefaultSharedPreferences(this).getStringSet(CurrencyConverterConstants.LISTED_CURRENCIES, null);
+    	usedCurrencies = CurrencyConverterUtil.ConvertStringToSet(
+    			PreferenceManager.getDefaultSharedPreferences(this).getString(CurrencyConverterConstants.LISTED_CURRENCIES, null));
     	
     	if (usedCurrencies == null || usedCurrencies.size() == 0) {
     		Editor e = PreferenceManager.getDefaultSharedPreferences(this).edit();
     		e.clear();
-	    	e.putStringSet(CurrencyConverterConstants.LISTED_CURRENCIES, defaultUsedCurrencies);
+	    	e.putString(CurrencyConverterConstants.LISTED_CURRENCIES, CurrencyConverterUtil.ConvertSetToString(defaultUsedCurrencies));
 	    	e.commit();
 	    	usedCurrencies = defaultUsedCurrencies;
     	}
@@ -157,6 +158,7 @@ public class CurrencyConverterActivity extends ListActivity implements OnClickLi
 					displayedList.add(currency);
 				}
 			}
+			displayedList = getSortedCurrencyList(displayedList, usedCurrencies);
 			adapter = new CurrencyConvertorArrayAdapter(
 					getApplicationContext(), R.layout.convertor_listitem, displayedList);
 			// Set the ListView adapter
@@ -165,7 +167,6 @@ public class CurrencyConverterActivity extends ListActivity implements OnClickLi
 			lv.setChoiceMode(ListView.CHOICE_MODE_SINGLE);
 			lv.setSelector(android.R.color.holo_blue_light);
 			lv.setDropListener(onDrop);
-			lv.setRemoveListener(onRemove);
 			// Create a ListView-specific touch listener. ListViews are given special treatment because
 	        // by default they handle touches for their list items... i.e. they're in charge of drawing
 	        // the pressed state (the list selector), handling list item clicks, etc.
@@ -181,11 +182,12 @@ public class CurrencyConverterActivity extends ListActivity implements OnClickLi
 	                            @Override
 	                            public void onDismiss(ListView listView, int[] reverseSortedPositions) {
 	                                for (int position : reverseSortedPositions) {
-	                                	Set<String> usedCurr = PreferenceManager.getDefaultSharedPreferences(listView.getContext()).getStringSet(CurrencyConverterConstants.LISTED_CURRENCIES, null);
+	                                	Set<String> usedCurr = CurrencyConverterUtil.ConvertStringToSet(
+	                                			PreferenceManager.getDefaultSharedPreferences(listView.getContext()).getString(CurrencyConverterConstants.LISTED_CURRENCIES, null));
 		                                usedCurr.remove((adapter.getItem(position)).getCode());
 		                                Editor e = PreferenceManager.getDefaultSharedPreferences(listView.getContext()).edit();
 		                                e.clear();
-		                    	    	e.putStringSet(CurrencyConverterConstants.LISTED_CURRENCIES, usedCurr);
+		                    	    	e.putString(CurrencyConverterConstants.LISTED_CURRENCIES, CurrencyConverterUtil.ConvertSetToString(usedCurr));
 		                    	    	e.commit();
 	                                    adapter.remove(adapter.getItem(position));
 	                                }
@@ -206,16 +208,19 @@ public class CurrencyConverterActivity extends ListActivity implements OnClickLi
 		@Override
 		public void drop(int from, int to) {
 				CurrencyDetails item=adapter.getItem(from);
-				
+				Set<String> displayedCurrencies = new LinkedHashSet<String>();
+				List<CurrencyDetails> currList = new ArrayList<CurrencyDetails>();				
 				adapter.remove(item);
 				adapter.insert(item, to);
-		}
-	};
-	
-	private TouchListView.RemoveListener onRemove=new TouchListView.RemoveListener() {
-		@Override
-		public void remove(int which) {
-				adapter.remove(adapter.getItem(which));
+				currList = adapter.getList();
+				
+				for(CurrencyDetails currency:currList){
+					displayedCurrencies.add(currency.getCode());
+				}
+				Editor e = PreferenceManager.getDefaultSharedPreferences(activity).edit();
+                e.clear();
+        	    e.putString(CurrencyConverterConstants.LISTED_CURRENCIES, CurrencyConverterUtil.ConvertSetToString(displayedCurrencies));
+        	    e.commit();
 		}
 	};
 	
@@ -236,12 +241,12 @@ public class CurrencyConverterActivity extends ListActivity implements OnClickLi
 			        Toast.makeText(activity, R.string.alertDialog_messages_no_currencies_on_display_list, Toast.LENGTH_SHORT).show();
 			    }
 			});
-    		Set<String> defaultUsedCurrencies = new HashSet<String>();
+    		Set<String> defaultUsedCurrencies = new LinkedHashSet<String>();
     		defaultUsedCurrencies.add("USD");
     		defaultUsedCurrencies.add("EUR");
     		Editor e = PreferenceManager.getDefaultSharedPreferences(activity).edit();
     		e.clear();
-	    	e.putStringSet(CurrencyConverterConstants.LISTED_CURRENCIES, defaultUsedCurrencies);
+	    	e.putString(CurrencyConverterConstants.LISTED_CURRENCIES, CurrencyConverterUtil.ConvertSetToString(defaultUsedCurrencies));
 	    	e.commit();
 	    	addMainLayout();
 		}
@@ -356,12 +361,12 @@ public class CurrencyConverterActivity extends ListActivity implements OnClickLi
 				        Toast.makeText(activity, R.string.alertDialog_messages_no_currencies_on_display_list, Toast.LENGTH_SHORT).show();
 				    }
 				});
-	    		Set<String> defaultUsedCurrencies = new HashSet<String>();
+	    		Set<String> defaultUsedCurrencies = new LinkedHashSet<String>();
 	    		defaultUsedCurrencies.add("USD");
 	    		defaultUsedCurrencies.add("EUR");
 	    		Editor e = PreferenceManager.getDefaultSharedPreferences(activity).edit();
 	    		e.clear();
-		    	e.putStringSet(CurrencyConverterConstants.LISTED_CURRENCIES, defaultUsedCurrencies);
+		    	e.putString(CurrencyConverterConstants.LISTED_CURRENCIES, CurrencyConverterUtil.ConvertSetToString(defaultUsedCurrencies));
 		    	e.commit();
 	    	}
 			return null;
@@ -423,11 +428,12 @@ public class CurrencyConverterActivity extends ListActivity implements OnClickLi
 	    @Override
 	    public Void doInBackground(Void... params) {
 			
-			Set<String> usedCurrencies = new HashSet<String>();
+			Set<String> usedCurrencies = new LinkedHashSet<String>();
 			db = new DatabaseHelper(getApplicationContext());
 			boolean shouldCacheRates = false;
 			
-	    	usedCurrencies = PreferenceManager.getDefaultSharedPreferences(getParent()).getStringSet(CurrencyConverterConstants.LISTED_CURRENCIES, null);
+	    	usedCurrencies = CurrencyConverterUtil.ConvertStringToSet(
+	    			PreferenceManager.getDefaultSharedPreferences(getParent()).getString(CurrencyConverterConstants.LISTED_CURRENCIES, null));
 	    	
 	    	TimeZone.setDefault(TimeZone.getTimeZone("GMT"));
 	    	Calendar cal = Calendar.getInstance(TimeZone.getTimeZone("GMT"));
@@ -504,14 +510,15 @@ public class CurrencyConverterActivity extends ListActivity implements OnClickLi
 	
 	public void removeFromDisplayList(View view) {
 		LinearLayout parentLayout = (LinearLayout)view.getParent();
-		Set<String> usedCurrencies = new HashSet<String>();
+		Set<String> usedCurrencies = new LinkedHashSet<String>();
     	
 		TextView currencyCode = (TextView)parentLayout.findViewById(R.id.currency_code);
-		usedCurrencies = PreferenceManager.getDefaultSharedPreferences(this).getStringSet(CurrencyConverterConstants.LISTED_CURRENCIES, null);
+		usedCurrencies = CurrencyConverterUtil.ConvertStringToSet(
+				PreferenceManager.getDefaultSharedPreferences(this).getString(CurrencyConverterConstants.LISTED_CURRENCIES, null));
     	usedCurrencies.remove(currencyCode.getText());
     	Editor e = PreferenceManager.getDefaultSharedPreferences(this).edit();
     	e.clear();
-	    e.putStringSet(CurrencyConverterConstants.LISTED_CURRENCIES, usedCurrencies);
+	    e.putString(CurrencyConverterConstants.LISTED_CURRENCIES, CurrencyConverterUtil.ConvertSetToString(usedCurrencies));
 	    e.commit();
 		
 	}
@@ -533,6 +540,19 @@ public class CurrencyConverterActivity extends ListActivity implements OnClickLi
 	          }
 	      },1000);
 
+	  }
+	  private List<CurrencyDetails> getSortedCurrencyList(List<CurrencyDetails> curencies, Set<String> sortedCodes) {
+		  List<CurrencyDetails> newList = new ArrayList<CurrencyDetails>();
+		  
+		  for(String code:sortedCodes) {
+			  for(CurrencyDetails currDetails:curencies){
+				  if (code.equalsIgnoreCase(currDetails.getCode())) {
+					  newList.add(currDetails);
+				  }
+			  }
+		  }
+		  
+		  return newList;
 	  }
 	
 }

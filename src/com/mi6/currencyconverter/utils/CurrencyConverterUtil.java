@@ -12,9 +12,11 @@ import java.text.ParseException;
 import java.text.SimpleDateFormat;
 import java.util.ArrayList;
 import java.util.GregorianCalendar;
+import java.util.LinkedHashSet;
 import java.util.List;
 import java.util.Locale;
 import java.util.Set;
+import java.util.SortedSet;
 import java.util.TimeZone;
 
 import org.apache.http.HttpEntity;
@@ -296,5 +298,28 @@ public class CurrencyConverterUtil {
 		return newDateString;
 	}
 	
-
+	public static Set<String> ConvertStringToSet(String savedString) {
+		
+		Set<String> strings = new LinkedHashSet<String>();
+		int index = 0;
+		if ((savedString != null) && (!"".equalsIgnoreCase(savedString))) {
+			while (index<savedString.length()) {
+			    strings.add(savedString.substring(index, Math.min(index+3,savedString.length())));
+			    index+=3;
+			}
+		}
+		return strings;
+	}
+	
+	public static String ConvertSetToString(Set<String> list) {
+		
+		StringBuilder stringList = new StringBuilder();
+		if ((list != null) && (list.size() > 0)) {
+			for (String str:list){
+				stringList.append(str);
+			}
+		}
+		return stringList.toString();
+	}
+	
 }
