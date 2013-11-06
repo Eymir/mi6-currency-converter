@@ -1,6 +1,8 @@
 package com.mi6.currencyconverter.activities;
 
 import java.io.InputStream;
+import java.util.Collections;
+import java.util.Comparator;
 import java.util.HashSet;
 import java.util.List;
 import java.util.Set;
@@ -41,6 +43,12 @@ public class CurrencySelectorActivity extends Activity {
 
 		// Get Currencies
 		List<CurrencyDetails> currencyList = currencyParser.getList();
+		Collections.sort(currencyList, new Comparator<CurrencyDetails>() {
+
+	        public int compare(CurrencyDetails c1, CurrencyDetails c2) {
+	            return c1.getCode().compareTo(c2.getCode());
+	        }
+		  });
 		
 		Set<String> usedCurrencies = new HashSet<String>();
     	

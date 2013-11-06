@@ -5,8 +5,12 @@
 	    android:layout_width="match_parent"
 	    android:layout_height="match_parent"
 	    android:orientation="vertical">
-	<ListView
-		android:id="@+id/convertorLV"
+	<com.mi6.currencyconverter.ui.TouchListView
+	    xmlns:tlv="http://schemas.android.com/apk/res/com.mi6.currencyconverter"
+	    android:drawSelectorOnTop="false"
+		tlv:normal_height="50dip"
+		tlv:grabber="@+id/move_button"
+		android:id="@android:id/list"
 		android:layout_width="fill_parent"
 		android:layout_height="fill_parent"
 		android:clickable="true"
@@ -17,7 +21,7 @@
         android:fadingEdge="horizontal"
         android:persistentDrawingCache="scrolling"
         android:smoothScrollbar="false" >
-	</ListView>
+	</com.mi6.currencyconverter.ui.TouchListView>
 	    <LinearLayout
         android:layout_width="match_parent"
         android:layout_height="wrap_content"
