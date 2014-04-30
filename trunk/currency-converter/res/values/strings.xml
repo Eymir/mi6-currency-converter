@@ -1,0 +1,20 @@
+<?xml version="1.0" encoding="utf-8"?>
+<resources>
+    <string name="main.app_name">Currency Converter</string>
+    <string name="alertDialog.messages.add_amount">Please add an amount</string>
+    <string name="alertDialog.messages.delete_value_from_field">Please delete values from one of the amount fields.</string>
+    <string name="alertDialog.messages.add_value_in_field">Please add an amount.</string>
+    <string name="alertDialog.messages.select_currency_field">Please select a currency field.</string>
+    <string name="alertDialog_messages_no_internet_connection">No internet connection! \nLast available rates will be used.</string>
+    <string name="main.general.button.ok">OK</string>
+    <string name="main.spinner.currency_prompt">Choose a currency</string>
+    <string name="alertDialog.messages.connect_timeout">Rates could not be loaded from the server. Please check your internet connection.</string>
+    <string name="alertDialog.messages.unknown_host">Server is not reacheable. Please check your internet connection.</string>
+    <string name="alertDialog.messages.no_cached_value">Currencies left blank don\'t have offline rates saved. In order to get those rates please connect to internet and start the application again. </string>
+    <string name="alertDialog.messages.not_caching_rates">Rates will not be cached.</string>
+    <string name="alertDialog.messages.no_currencies_on_display_list">There are no currencies in the conversion list. Default values will be used.</string>
+    
+    <string name="menu_cache_policy">Cache Policy</string>
+    <string name="menu_exit">Exit</string>
+
+</resources>

@@ -1,0 +1,46 @@
+<?xml version="1.0" encoding="utf-8"?>
+        
+	<RelativeLayout xmlns:android="http://schemas.android.com/apk/res/android"
+	    android:id="@+id/mainLinearlayoutId"
+	    android:layout_width="match_parent"
+	    android:layout_height="match_parent"
+	    android:orientation="vertical">
+	<com.mi6.currencyconverter.ui.TouchListView
+	    xmlns:tlv="http://schemas.android.com/apk/res/com.mi6.currencyconverter"
+	    android:drawSelectorOnTop="false"
+		tlv:normal_height="50dip"
+		tlv:grabber="@+id/move_button"
+		android:id="@android:id/list"
+		android:layout_width="fill_parent"
+		android:layout_height="fill_parent"
+		android:clickable="true"
+        android:choiceMode="singleChoice" 
+        android:listSelector="@drawable/listview_selector"
+        android:layout_weight="1"
+        android:cacheColorHint="@android:color/transparent"
+        android:fadingEdge="horizontal"
+        android:persistentDrawingCache="scrolling"
+        android:smoothScrollbar="false" >
+	</com.mi6.currencyconverter.ui.TouchListView>
+	    <LinearLayout
+        android:layout_width="match_parent"
+        android:layout_height="wrap_content"
+        android:layout_alignParentBottom="true"
+        android:layout_gravity="bottom"
+        android:orientation="horizontal"
+        android:background="#FF000000"
+        android:paddingLeft="20dp"
+        android:paddingRight="20dp" >
+
+			<Button
+			    android:id="@+id/convert"
+			    android:layout_width="0dp"
+    			android:layout_height="wrap_content"
+    			android:layout_gravity="center_vertical"
+    			android:layout_weight="1"
+    			android:background="@drawable/list_item_style"
+			    android:onClick="convertAction"
+			    android:text="Convert" />
+		</LinearLayout>
+	</RelativeLayout>	
+
