@@ -1,0 +1,35 @@
+<?xml version="1.0" encoding="utf-8"?>
+<manifest xmlns:android="http://schemas.android.com/apk/res/android"
+      package="com.mi6.currencyconverter"
+      android:versionCode="4"
+      android:versionName="2.1">
+    <uses-sdk android:minSdkVersion="12"
+        android:targetSdkVersion="18" />
+    <uses-permission android:name="android.permission.INTERNET"/>
+    <uses-permission android:name="android.permission.ACCESS_NETWORK_STATE" />
+    <uses-permission android:name="android.permission.WRITE_EXTERNAL_STORAGE" />
+    <uses-permission android:name="android.permission." />
+    <application android:theme="@style/Theme.Basic" android:icon="@drawable/icon" android:label="@string/main.app_name" android:allowBackup="true" android:debuggable="true">
+        <activity android:name="com.mi6.currencyconverter.activities.CurrencyConverterTabActivity"
+                  android:label="@string/main.app_name"
+                  android:windowSoftInputMode="adjustPan"
+                  android:screenOrientation="portrait">
+            <intent-filter>
+                <action android:name="android.intent.action.MAIN" />
+                <category android:name="android.intent.category.LAUNCHER" />
+            </intent-filter>
+        </activity>
+        
+        <activity 	android:theme="@style/Theme.Basic" 
+            		android:name="com.mi6.currencyconverter.activities.CurrencyConverterActivity" 
+            		android:screenOrientation="portrait"/>
+         
+        <activity 	android:theme="@style/Theme.Basic"
+            		android:name="com.mi6.currencyconverter.activities.CurrencySelectorActivity" 
+            		android:screenOrientation="portrait"/>
+        <activity 	android:theme="@style/Theme.Basic"
+            		android:name="com.mi6.currencyconverter.activities.CurrencyGraphActivity" 
+            		android:screenOrientation="portrait"/>
+        
+    </application>
+</manifest> 
